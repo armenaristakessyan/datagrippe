@@ -1,7 +1,7 @@
 {
   "name": "datagrippe",
   "productName": "DataGrippe",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A modern, simple database IDE for PostgreSQL and SQL Server",
   "main": "./out/main/index.js",
   "author": "Armen Aristakessyan",
@@ -69,11 +69,28 @@
   "build": {
     "appId": "dev.datagrippe.app",
     "productName": "DataGrippe",
-    "directories": { "buildResources": "build", "output": "dist" },
-    "files": ["out/**/*", "package.json"],
-    "asarUnpack": ["**/*.node"],
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "**/*.node"
+    ],
     "icon": "build/icon.png",
-    "mac": { "category": "public.app-category.developer-tools", "target": ["dmg"], "icon": "build/icon.png", "identity": "-" },
-    "dmg": { "artifactName": "${productName}-${version}-${arch}.${ext}" }
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        "dmg"
+      ],
+      "icon": "build/icon.png",
+      "identity": "-"
+    },
+    "dmg": {
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    }
   }
 }
