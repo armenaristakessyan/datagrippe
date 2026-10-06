@@ -85,6 +85,25 @@ test.describe('SQL console', () => {
     await page.getByRole('button', { name: 'Commit' }).click()
     await expect(page.getByRole('button', { name: 'Commit' })).toBeHidden()
   })
+
+  test('the editor context menu gets the theme colors', async ({ dg }) => {
+    await dg.createConnection('postgres')
+    await dg.menu('New console')
+    await dg.typeSql('select 1')
+    await dg.editor.click({ button: 'right' })
+    const menu = dg.page.locator('.monaco-menu-container')
+    await expect(menu).toContainText('Run statement')
+    // Monaco renders it in a shadow root outside .monaco-editor: without the theme variables it is transparent.
+    const background = await menu.evaluate((node) => {
+      // Runs in the renderer, where globalThis is the window (this project has no DOM typings).
+      type Win = { getComputedStyle(el: unknown): { getPropertyValue(name: string): string } }
+      const host = (node as unknown as { getRootNode(): { host: unknown } }).getRootNode().host
+      return (globalThis as unknown as Win).getComputedStyle(host).getPropertyValue('--vscode-menu-background')
+    })
+    expect(background.trim()).not.toBe('')
+    await dg.shot('editor-context-menu')
+    await dg.page.keyboard.press('Escape')
+  })
 })
 
 test.describe('palette and theme', () => {

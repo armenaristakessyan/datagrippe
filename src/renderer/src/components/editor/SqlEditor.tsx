@@ -495,7 +495,9 @@ export function SqlEditor({ tab, dialect, database, actions, className }: SqlEdi
 
   return (
     <div className={cn('dg-sql-editor relative h-full min-h-0 w-full bg-surface', className)}>
-      <div ref={containerRef} className="absolute inset-0" data-testid="sql-editor" />
+      {/* monaco-component: Monaco defines its theme colors on that class. The context menu (fixedOverflowWidgets) is
+          rendered in this container, outside .monaco-editor: without it the menu has no background. */}
+      <div ref={containerRef} className="monaco-component absolute inset-0" data-testid="sql-editor" />
       {load.status === 'loading' && <EditorSkeleton />}
       {load.status === 'error' && (
         <div className="absolute inset-0 flex items-center justify-center bg-surface">
