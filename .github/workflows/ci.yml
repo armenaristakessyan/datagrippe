@@ -1,0 +1,57 @@
+name: CI
+
+# Every push to main and every pull request; the release workflow calls it before building the DMGs.
+# The end-to-end suite drives the macOS app and runs locally only (npm run test:e2e).
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Typecheck, unit tests, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run test:unit
+      - run: npm run build
+
+  integration:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Start PostgreSQL, SQL Server and Vault
+        run: docker compose -f docker-compose.test.yml up -d --wait
+      - run: npm run test:integration
+      - name: Container logs
+        if: failure()
+        run: docker compose -f docker-compose.test.yml logs --tail 100
+      - name: Stop the containers
+        if: always()
+        run: npm run db:down

@@ -1,0 +1,217 @@
+{
+	"folders": {
+		"Team": {},
+		"Team/Analytics": { "parent": "Team" },
+		"Staging": {}
+	},
+	"connection-types": {
+		"dev": { "name": "Development", "color": "255,255,255", "auto-commit": true, "confirm-execute": false },
+		"prod": { "name": "Production", "color": "247,159,129", "auto-commit": false, "confirm-execute": true },
+		"qa": { "name": "QA", "color": "196,255,181", "confirm-execute": false },
+		"critical": { "name": "Critical", "color": "220,30,30", "confirm-execute": false },
+		"careful": { "name": "Careful", "color": "255,255,255", "confirm-execute": "true" },
+		"staging": { "name": "Staging", "color": "0,128,255", "confirm-execute": false },
+		"live": { "name": "Live production", "color": "255,255,255" }
+	},
+	"connections": {
+		"pg-ssh-ssl": {
+			"provider": "postgresql",
+			"driver": "postgres-jdbc",
+			"name": "Analytics warehouse",
+			"folder": "Team/Analytics",
+			"read-only": true,
+			"save-password": true,
+			"configuration": {
+				"host": "warehouse.example.internal",
+				"port": "6432",
+				"database": "analytics",
+				"user": "analyst",
+				"type": "qa",
+				"auth-model": "native",
+				"bootstrap": { "defaultSchema": "marts" },
+				"handlers": {
+					"ssh_tunnel": {
+						"type": "TUNNEL",
+						"enabled": true,
+						"save-password": true,
+						"user": "jump",
+						"properties": {
+							"host": "bastion.example.internal",
+							"port": 2222,
+							"authType": "PUBLIC_KEY",
+							"keyPath": "/home/me/.ssh/id_ed25519",
+							"implementation": "sshj"
+						}
+					},
+					"postgre_ssl": {
+						"type": "CONFIG",
+						"enabled": true,
+						"properties": {
+							"sslMode": "verify-ca",
+							"sslRootCert": "/certs/ca.pem",
+							"sslClientCert": "/certs/client.pem",
+							"sslClientKey": "/certs/client.pk8"
+						}
+					}
+				}
+			}
+		},
+		"pg-ssh-incomplete": {
+			"provider": "postgresql",
+			"driver": "postgres-jdbc",
+			"name": "Reporting",
+			"folder": "Staging",
+			"configuration": {
+				"host": "reporting.example.internal",
+				"port": "5432",
+				"database": "reporting",
+				"type": "staging",
+				"handlers": {
+					"ssh_tunnel": {
+						"enabled": true,
+						"properties": { "host": "bastion.example.internal", "port": "22", "authType": "PASSWORD" }
+					},
+					"postgre_ssl": { "enabled": false, "properties": { "sslMode": "disable" } }
+				}
+			}
+		},
+		"pg-ssh-agent": {
+			"provider": "postgresql",
+			"driver": "postgres-jdbc",
+			"name": "Agent tunnel",
+			"configuration": {
+				"host": "10.0.0.5",
+				"database": "app",
+				"user": "app",
+				"type": "dev",
+				"properties": { "sslmode": "disable" },
+				"handlers": {
+					"ssh_tunnel": {
+						"enabled": true,
+						"properties": { "host": "gw.example.internal", "authType": "AGENT", "user": "ops", "jumpServer.host": "jump.example.internal" }
+					},
+					"socks_proxy": { "enabled": true, "properties": { "socks-host": "proxy.example.internal" } }
+				}
+			}
+		},
+		"mssql-instance": {
+			"provider": "sqlserver",
+			"driver": "mssql_jdbc_ms_new",
+			"name": "Legacy ERP",
+			"configuration": {
+				"host": "erp.example.internal\\SQLEXPRESS",
+				"database": "erp",
+				"user": "erp_reader",
+				"type": "prod",
+				"auth-model": "sqlserver_native",
+				"properties": { "encrypt": "true", "trustStore": "/certs/store.jks" }
+			}
+		},
+		"mssql-critical": {
+			"provider": "sqlserver",
+			"driver": "azure_ms_new",
+			"name": "Billing",
+			"configuration": {
+				"host": "billing.example.internal",
+				"port": "1433",
+				"database": "billing",
+				"user": "billing",
+				"type": "critical",
+				"auth-model": "sqlserver_ntlm",
+				"provider-properties": { "@dbeaver-show-all-schemas@": "false" }
+			}
+		},
+		"pg-careful": {
+			"provider": "postgresql",
+			"driver": "postgres-jdbc",
+			"name": "Careful one",
+			"configuration": { "host": "careful.example.internal", "database": "c", "user": "c", "type": "careful" }
+		},
+		"pg-live": {
+			"provider": "postgresql",
+			"driver": "postgres-jdbc",
+			"name": "Live one",
+			"configuration": { "host": "live.example.internal", "database": "l", "user": "l", "type": "live" }
+		},
+		"pg-preprod": {
+			"provider": "postgresql",
+			"driver": "postgres-jdbc",
+			"name": "Billing preprod",
+			"folder": "Staging",
+			"navigator-show-system-objects": true,
+			"configuration": {
+				"host": "billing-preprod.example.internal",
+				"port": "not-a-port",
+				"database": "billing",
+				"user": "billing",
+				"type": "dev",
+				"color": "128,0,128",
+				"auth-model": "postgres_pgpass"
+			}
+		},
+		"pg-kerberos": {
+			"provider": "postgresql",
+			"driver": "postgres-jdbc",
+			"name": "Kerberized",
+			"configuration": { "host": "krb.example.internal", "database": "k", "type": "dev", "auth-model": "postgres_kerberos" }
+		},
+		"pg-vault-hints": {
+			"provider": "postgresql",
+			"driver": "postgres-jdbc",
+			"name": "Vault with hints",
+			"configuration": {
+				"host": "vaulted.example.internal",
+				"database": "vaulted",
+				"type": "dev",
+				"auth-model": "hashicorp_vault",
+				"auth-properties": {
+					"vault.address": "https://vault.example.internal:8200/",
+					"vault.namespace": "admin/data",
+					"vault.auth.method": "ldap",
+					"vault.auth.mount": "corp-ldap",
+					"vault.username": "jdoe",
+					"vault.secret.path": "/v1/database/creds/readonly",
+					"vault.token": "hvs.FIXTURE_TOKEN_NOT_IMPORTED",
+					"vault.password": "FIXTURE_PASSWORD_NOT_IMPORTED"
+				}
+			}
+		},
+		"pg-vault-role": {
+			"provider": "postgresql",
+			"driver": "postgres-jdbc",
+			"name": "Vault role only",
+			"configuration": {
+				"host": "role.example.internal",
+				"database": "role_db",
+				"type": "dev",
+				"auth-model": "vault",
+				"auth-properties": { "role": "analytics-ro", "secret_id": "FIXTURE_SECRET_ID_NOT_IMPORTED", "method": "approle" }
+			}
+		},
+		"greenplum-1": {
+			"provider": "greenplum",
+			"driver": "greenplum",
+			"name": "Greenplum",
+			"configuration": { "host": "gp.example.internal", "port": "5432", "database": "gp", "user": "gp", "type": "dev" }
+		},
+		"redshift-1": {
+			"provider": "redshift",
+			"driver": "redshift",
+			"name": "Redshift",
+			"configuration": { "host": "rs.example.internal", "port": "5439", "database": "dev", "type": "dev" }
+		},
+		"mysql-1": {
+			"provider": "mysql",
+			"driver": "mysql8",
+			"name": "Shop",
+			"configuration": { "host": "shop.example.internal", "port": "3306", "database": "shop", "type": "dev" }
+		},
+		"pg-no-host": {
+			"provider": "postgresql",
+			"driver": "postgres-jdbc",
+			"name": "",
+			"configuration": { "type": "dev", "user": "me" }
+		},
+		"broken-entry": "not an object"
+	}
+}

@@ -1,0 +1,81 @@
+{
+	"folders": {
+		"PROD": {}
+	},
+	"connections": {
+		"postgres-jdbc-prod-analytics": {
+			"provider": "postgresql",
+			"driver": "postgres-jdbc",
+			"name": "PGSQL - Analytics - warehouse",
+			"folder": "PROD",
+			"configuration": {
+				"host": "pg-analytics.example.cloud",
+				"port": "5432",
+				"database": "warehouse",
+				"url": "jdbc:postgresql://pg-analytics.example.cloud:5432/warehouse",
+				"configurationType": "MANUAL",
+				"type": "dev",
+				"closeIdleConnection": false,
+				"provider-properties": {
+					"@dbeaver-show-non-default-db@": "false"
+				},
+				"auth-model": "vault"
+			}
+		},
+		"postgres-jdbc-prod-payments": {
+			"provider": "postgresql",
+			"driver": "postgres-jdbc",
+			"name": "PGSQL - All Payments DBs - pg-payments.example.cloud",
+			"folder": "PROD",
+			"configuration": {
+				"host": "pg-payments.example.cloud",
+				"port": "5432",
+				"database": "payments-prod",
+				"url": "jdbc:postgresql://pg-payments.example.cloud:5432/payments-prod",
+				"configurationType": "MANUAL",
+				"type": "dev",
+				"closeIdleConnection": false,
+				"provider-properties": {
+					"@dbeaver-show-non-default-db@": "true"
+				},
+				"auth-model": "vault"
+			}
+		},
+		"postgres-jdbc-prod-ledger": {
+			"provider": "postgresql",
+			"driver": "postgres-jdbc",
+			"name": "PGSQL - Ledger - @pg-ledger.example.cloud",
+			"folder": "PROD",
+			"configuration": {
+				"host": "pg-ledger.example.cloud",
+				"port": "5432",
+				"database": "postgres",
+				"url": "jdbc:postgresql://pg-ledger.example.cloud:5432/postgres",
+				"configurationType": "MANUAL",
+				"type": "dev",
+				"closeIdleConnection": false,
+				"auth-model": "vault"
+			}
+		},
+		"sqlserver-prod-billing-legacy": {
+			"provider": "sqlserver",
+			"driver": "microsoft",
+			"name": "SQL SERVER - billing-prod",
+			"folder": "PROD",
+			"configuration": {
+				"host": "mssql-prod.example.cloud",
+				"port": "1433",
+				"database": "billing-prod",
+				"url": "jdbc:sqlserver://;serverName=mssql-prod.example.cloud;databaseName=billing-prod",
+				"configurationType": "MANUAL",
+				"type": "dev",
+				"closeIdleConnection": false,
+				"provider-properties": {
+					"@dbeaver-show-all-schemas@": "true",
+					"sslTrustServerCertificate": "true"
+				},
+				"auth-model": "vault"
+			}
+		}
+	}
+}

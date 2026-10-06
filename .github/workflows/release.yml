@@ -1,0 +1,75 @@
+name: Release
+
+# A tag "v<package.json version>" publishes a GitHub release with both macOS DMGs:
+#   npm version patch && git push --follow-tags
+# A manual run (Actions > Release > Run workflow) builds the same DMGs as a workflow artifact, without a release.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: CI
+    uses: ./.github/workflows/ci.yml
+
+  dmg:
+    name: macOS DMGs
+    needs: ci
+    runs-on: macos-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write # gh release create
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - name: Check the tag against package.json
+        if: github.ref_type == 'tag'
+        run: |
+          expected="v$(node -p "require('./package.json').version")"
+          if [ "$GITHUB_REF_NAME" != "$expected" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match the package.json version ($expected)."
+            exit 1
+          fi
+      - run: npm ci
+      - name: Build both DMGs (Apple silicon and Intel, signed ad hoc)
+        run: npm run dist:release
+      - name: Verify the apps
+        run: |
+          for app in dist/mac*/DataGrippe.app; do
+            codesign --verify --deep --strict --verbose=2 "$app"
+            echo "$app: $(lipo -archs "$app/Contents/MacOS/DataGrippe")"
+          done
+      - name: Checksums
+        working-directory: dist
+        run: shasum -a 256 *.dmg | tee SHA256SUMS.txt
+      - name: Upload the DMGs
+        if: github.ref_type != 'tag'
+        uses: actions/upload-artifact@v7
+        with:
+          name: DataGrippe-dmg
+          path: |
+            dist/*.dmg
+            dist/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+      - name: Publish the release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "$GITHUB_REF_NAME" dist/*.dmg dist/SHA256SUMS.txt
+          --repo "$GITHUB_REPOSITORY"
+          --title "DataGrippe ${GITHUB_REF_NAME#v}"
+          --notes-file .github/release-notes.md
+          --generate-notes
+          --verify-tag

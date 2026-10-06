@@ -1,0 +1,59 @@
+{
+	"connections": {
+		"pg-url-only": {
+			"provider": "postgresql",
+			"driver": "postgres-jdbc",
+			"name": "URL only",
+			"configuration": {
+				"url": "jdbc:postgresql://url-host.example.internal:5433/urldb?sslmode=require&user=url_user&password=NOT_IMPORTED_URL_PASSWORD",
+				"configurationType": "URL",
+				"type": "dev",
+				"auth-model": "native"
+			}
+		},
+		"pg-multihost": {
+			"provider": "postgresql",
+			"driver": "postgres-jdbc",
+			"name": "Multi host",
+			"configuration": {
+				"url": "jdbc:postgresql://a.example.internal:5432,b.example.internal:5433/app",
+				"configurationType": "URL",
+				"type": "dev",
+				"user": "app"
+			}
+		},
+		"mssql-url": {
+			"provider": "sqlserver",
+			"driver": "microsoft",
+			"name": "Sales",
+			"configuration": {
+				"url": "jdbc:sqlserver://;serverName=mssql-url.example.internal;databaseName=sales;encrypt=false",
+				"configurationType": "URL",
+				"type": "dev",
+				"user": "sales_reader"
+			}
+		},
+		"mssql-url-instance": {
+			"provider": "sqlserver",
+			"driver": "mssql_jdbc_ms_new",
+			"name": "Instance via URL",
+			"configuration": {
+				"url": "jdbc:sqlserver://inst-host.example.internal\\REPORTING:1444;databaseName={odd;name};encrypt=true;trustServerCertificate=true",
+				"configurationType": "URL",
+				"type": "dev",
+				"user": "rpt"
+			}
+		},
+		"mssql-jtds": {
+			"provider": "sqlserver",
+			"driver": "jtds_sqlserver",
+			"name": "Inventory (jTDS)",
+			"configuration": {
+				"url": "jdbc:jtds:sqlserver://jtds.example.internal:1500/inventory;ssl=require",
+				"configurationType": "URL",
+				"type": "dev",
+				"user": "inv"
+			}
+		}
+	}
+}

@@ -1,0 +1,6 @@
+{
+	"connections": {
+		"pg-truncated": {
+			"provider": "postgresql",
+			"configuration": {
+				"host": "truncated.example.internal",

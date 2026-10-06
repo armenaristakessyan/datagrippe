@@ -1,0 +1,41 @@
+# Throwaway databases used by integration and e2e tests.
+# Credentials here are test-only values; never reuse them anywhere else.
+services:
+  postgres:
+    image: ${PG_IMAGE:-postgres:16}
+    container_name: datagrippe-test-pg
+    environment:
+      POSTGRES_USER: datagrippe
+      POSTGRES_PASSWORD: datagrippe_test
+      POSTGRES_DB: postgres
+    ports:
+      - "127.0.0.1:55432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U datagrippe -d postgres"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  mssql:
+    # Default is the official image (amd64; needs Rosetta on Apple silicon).
+    # Override with MSSQL_IMAGE in .env to use a local arm64-compatible image.
+    image: ${MSSQL_IMAGE:-mcr.microsoft.com/mssql/server:2022-latest}
+    platform: ${MSSQL_PLATFORM:-linux/amd64}
+    container_name: datagrippe-test-mssql
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Datagrippe_Test_1"
+      MSSQL_PID: Developer
+    ports:
+      - "127.0.0.1:51433:1433"
+  vault:
+    # Dev-mode Vault (in-memory, unsealed) for the HashiCorp Vault integration tests. It reaches the
+    # databases above by service name (postgres:5432, mssql:1433) to issue dynamic credentials.
+    image: ${VAULT_IMAGE:-hashicorp/vault:1.20}
+    container_name: datagrippe-test-vault
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: datagrippe-vault-root
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+    cap_add:
+      - IPC_LOCK
+    ports:
+      - "127.0.0.1:58200:8200"

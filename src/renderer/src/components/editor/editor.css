@@ -1,0 +1,80 @@
+/* Monaco decorations and chrome tweaks for the SQL console. Colours come from the design tokens. */
+
+/* Statement under the caret: hairline bar in the gutter + a barely-there wash. */
+.monaco-editor .dg-stmt-line {
+  background: color-mix(in srgb, var(--c-accent) 3.5%, transparent);
+}
+.monaco-editor .dg-stmt-gutter {
+  margin-left: 4px;
+  width: 2px !important;
+  background: color-mix(in srgb, var(--c-accent) 55%, transparent);
+  border-radius: 1px;
+}
+
+/* Brief flash of the SQL that was just sent to the server. */
+.monaco-editor .dg-flash {
+  background: var(--c-accent-soft);
+  border-radius: 2px;
+  animation: dg-flash 700ms ease-out forwards;
+}
+@keyframes dg-flash {
+  0% {
+    background: color-mix(in srgb, var(--c-accent) 26%, transparent);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+/* Error location: keep Monaco's squiggle, add a faint wash so it reads at a glance. */
+.monaco-editor .dg-error-range {
+  background: var(--c-danger-soft);
+  border-radius: 2px;
+}
+
+/* Calmer widgets: rounded, tokenised shadows, app font for the chrome. */
+.dg-sql-editor .monaco-editor .suggest-widget,
+.dg-overflow .suggest-widget,
+.monaco-editor .suggest-widget {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-popover);
+}
+.monaco-editor .suggest-details-container .suggest-details {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-popover);
+}
+/* The hover's outer box is .monaco-resizable-hover (Monaco rounds it with --vscode-cornerRadius-large,
+   which the standalone editor leaves undefined); the inner .monaco-hover inherits its radius. Monaco's
+   stylesheet loads after ours (lazy chunk), hence the extra .dg-sql-editor for specificity. */
+.dg-sql-editor {
+  --vscode-cornerRadius-large: var(--radius-lg);
+}
+.dg-sql-editor .monaco-editor .monaco-resizable-hover {
+  border-color: var(--c-line-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-popover);
+  overflow: hidden;
+}
+.dg-sql-editor .monaco-editor .monaco-resizable-hover > .monaco-hover {
+  border-radius: inherit;
+}
+.monaco-editor .monaco-hover .hover-contents {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 18px;
+}
+.monaco-editor .monaco-hover code,
+.monaco-editor .suggest-details code {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+.monaco-editor .find-widget {
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  box-shadow: var(--shadow-popover);
+}
+.monaco-editor .placeholder,
+.monaco-editor .editor-placeholder {
+  color: var(--c-faint) !important;
+  font-style: normal;
+}

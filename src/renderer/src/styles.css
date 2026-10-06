@@ -1,0 +1,442 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
+
+/*
+ * Design tokens. Components must use these semantic utilities (bg-panel, text-muted,
+ * border-line, …) — never raw Tailwind palette colors (bg-zinc-800) — so both themes work.
+ * Dark is the default; `.light` on <html> switches the palette.
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* surfaces */
+  --c-app: #0d0e11; /* window background, behind everything */
+  --c-panel: #131519; /* sidebar, tab strips, toolbars */
+  --c-surface: #17191e; /* editor, grids, main content */
+  --c-elevated: #1d2026; /* popovers, menus, dialogs */
+  --c-overlay: rgb(5 6 8 / 0.62); /* modal backdrop */
+  --c-hover: rgb(255 255 255 / 0.045);
+  --c-active: rgb(255 255 255 / 0.08);
+  --c-input: rgb(255 255 255 / 0.035);
+
+  /* lines */
+  --c-line: rgb(255 255 255 / 0.07);
+  --c-line-strong: rgb(255 255 255 / 0.13);
+  --c-focus: rgb(124 140 255 / 0.55);
+
+  /* text */
+  --c-fg: #e7e9ee;
+  --c-muted: #a0a6b2;
+  /* subtle: secondary text, ≥4.5:1 on every surface (app, panel, surface, elevated). faint: decoration only (separators, icons, placeholders), never information. */
+  --c-subtle: #858c99;
+  --c-faint: #5d6370;
+
+  /* accent */
+  --c-accent: #7c8cff;
+  --c-accent-hover: #8f9dff;
+  --c-accent-fg: #0b0c10;
+  --c-accent-soft: rgb(124 140 255 / 0.14);
+  --c-selection: rgb(124 140 255 / 0.22);
+
+  /* status */
+  --c-success: #3ecf8e;
+  --c-success-soft: rgb(62 207 142 / 0.13);
+  --c-warning: #f0b429;
+  --c-warning-soft: rgb(240 180 41 / 0.13);
+  --c-danger: #f2555a;
+  --c-danger-soft: rgb(242 85 90 / 0.13);
+  --c-info: #4fb3ff;
+  --c-info-soft: rgb(79 179 255 / 0.13);
+
+  /* connection tags */
+  --c-tag-red: #f2555a;
+  --c-tag-orange: #f28c38;
+  --c-tag-yellow: #e8c547;
+  --c-tag-green: #3ecf8e;
+  --c-tag-blue: #4fb3ff;
+  --c-tag-purple: #b07cff;
+  --c-tag-gray: #8a909c;
+
+  /* data grid */
+  --c-grid-header: #15171b;
+  --c-grid-row-alt: rgb(255 255 255 / 0.018);
+  --c-grid-null: #5d6370;
+  --c-grid-modified: rgb(240 180 41 / 0.16);
+  --c-grid-inserted: rgb(62 207 142 / 0.12);
+  --c-grid-deleted: rgb(242 85 90 / 0.12);
+
+  /* syntax (shared by Monaco themes and inline SQL previews) */
+  --c-syn-keyword: #9d8cff;
+  --c-syn-string: #7ed4a6;
+  --c-syn-number: #f5a97f;
+  --c-syn-comment: #5f6675;
+  --c-syn-function: #6cc4ff;
+  --c-syn-operator: #c2c8d4;
+  --c-syn-type: #f0c674;
+
+  /* dialect marks */
+  --c-dialect-postgres: #5b9be6;
+  --c-dialect-postgres-deep: #2f63b0;
+  --c-dialect-mssql: #f0583f;
+  --c-dialect-mssql-deep: #b8261d;
+
+  /* brand (app mark) and content on solid fills (danger buttons, switch knobs) */
+  --c-brand: #8b95ff;
+  --c-brand-deep: #4f46e5;
+  --c-on-solid: #ffffff;
+
+  /* misc */
+  --c-kbd: rgb(255 255 255 / 0.06);
+  --c-kbd-line: rgb(255 255 255 / 0.1);
+  --c-glow: rgb(124 140 255 / 0.16);
+  --c-skeleton: rgb(255 255 255 / 0.05);
+  --c-skeleton-shine: rgb(255 255 255 / 0.09);
+
+  --shadow-popover: 0 0 0 1px rgb(255 255 255 / 0.06), 0 12px 32px -8px rgb(0 0 0 / 0.6), 0 4px 12px -4px rgb(0 0 0 / 0.4);
+  --shadow-dialog: 0 0 0 1px rgb(255 255 255 / 0.07), 0 24px 64px -12px rgb(0 0 0 / 0.7);
+  --shadow-raised: 0 0 0 1px rgb(255 255 255 / 0.05), 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-inset: inset 0 1px 0 rgb(255 255 255 / 0.04);
+}
+
+:root.light {
+  color-scheme: light;
+
+  --c-app: #eceef1;
+  --c-panel: #f6f7f9;
+  --c-surface: #ffffff;
+  --c-elevated: #ffffff;
+  --c-overlay: rgb(15 18 24 / 0.32);
+  --c-hover: rgb(15 18 24 / 0.045);
+  --c-active: rgb(15 18 24 / 0.075);
+  --c-input: rgb(15 18 24 / 0.025);
+
+  --c-line: rgb(15 18 24 / 0.085);
+  --c-line-strong: rgb(15 18 24 / 0.15);
+  --c-focus: rgb(84 101 255 / 0.5);
+
+  --c-fg: #171a21;
+  --c-muted: #555c69;
+  --c-subtle: #616875;
+  --c-faint: #9aa0aa;
+
+  --c-accent: #5465ff;
+  --c-accent-hover: #4354f0;
+  --c-accent-fg: #ffffff;
+  --c-accent-soft: rgb(84 101 255 / 0.1);
+  --c-selection: rgb(84 101 255 / 0.16);
+
+  --c-success: #16a368;
+  --c-success-soft: rgb(22 163 104 / 0.1);
+  --c-warning: #b7791f;
+  --c-warning-soft: rgb(183 121 31 / 0.11);
+  --c-danger: #d93a3f;
+  --c-danger-soft: rgb(217 58 63 / 0.09);
+  --c-info: #1d7fd6;
+  --c-info-soft: rgb(29 127 214 / 0.1);
+
+  --c-tag-red: #e5484d;
+  --c-tag-orange: #ef7d2a;
+  --c-tag-yellow: #d6a700;
+  --c-tag-green: #16a368;
+  --c-tag-blue: #1d7fd6;
+  --c-tag-purple: #8e4ee8;
+  --c-tag-gray: #7c838f;
+
+  --c-grid-header: #f6f7f9;
+  --c-grid-row-alt: rgb(15 18 24 / 0.018);
+  --c-grid-null: #a1a7b1;
+  --c-grid-modified: rgb(214 167 0 / 0.16);
+  --c-grid-inserted: rgb(22 163 104 / 0.11);
+  --c-grid-deleted: rgb(217 58 63 / 0.1);
+
+  --c-syn-keyword: #6b4fe0;
+  --c-syn-string: #0f8a5f;
+  --c-syn-number: #c4571d;
+  --c-syn-comment: #9aa0ab;
+  --c-syn-function: #1d6fc2;
+  --c-syn-operator: #4b5260;
+  --c-syn-type: #a66a00;
+
+  --c-dialect-postgres: #3d7fd1;
+  --c-dialect-postgres-deep: #24589f;
+  --c-dialect-mssql: #e8513a;
+  --c-dialect-mssql-deep: #b0241b;
+
+  --c-brand: #7380ff;
+  --c-brand-deep: #4338ca;
+  --c-on-solid: #ffffff;
+
+  --c-kbd: rgb(15 18 24 / 0.04);
+  --c-kbd-line: rgb(15 18 24 / 0.11);
+  --c-glow: rgb(84 101 255 / 0.1);
+  --c-skeleton: rgb(15 18 24 / 0.055);
+  --c-skeleton-shine: rgb(15 18 24 / 0.025);
+
+  --shadow-popover: 0 0 0 1px rgb(15 18 24 / 0.08), 0 12px 32px -8px rgb(15 18 24 / 0.18), 0 4px 12px -4px rgb(15 18 24 / 0.1);
+  --shadow-dialog: 0 0 0 1px rgb(15 18 24 / 0.08), 0 24px 64px -12px rgb(15 18 24 / 0.28);
+  --shadow-raised: 0 0 0 1px rgb(15 18 24 / 0.08), 0 1px 2px rgb(15 18 24 / 0.06);
+  --shadow-inset: inset 0 1px 0 rgb(255 255 255 / 0.6);
+}
+
+@theme inline {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --color-app: var(--c-app);
+  --color-panel: var(--c-panel);
+  --color-surface: var(--c-surface);
+  --color-elevated: var(--c-elevated);
+  --color-overlay: var(--c-overlay);
+  --color-hover: var(--c-hover);
+  --color-active: var(--c-active);
+  --color-input: var(--c-input);
+
+  --color-line: var(--c-line);
+  --color-line-strong: var(--c-line-strong);
+  --color-focus: var(--c-focus);
+
+  --color-fg: var(--c-fg);
+  --color-muted: var(--c-muted);
+  --color-subtle: var(--c-subtle);
+  --color-faint: var(--c-faint);
+
+  --color-accent: var(--c-accent);
+  --color-accent-hover: var(--c-accent-hover);
+  --color-accent-fg: var(--c-accent-fg);
+  --color-accent-soft: var(--c-accent-soft);
+  --color-selection: var(--c-selection);
+
+  --color-success: var(--c-success);
+  --color-success-soft: var(--c-success-soft);
+  --color-warning: var(--c-warning);
+  --color-warning-soft: var(--c-warning-soft);
+  --color-danger: var(--c-danger);
+  --color-danger-soft: var(--c-danger-soft);
+  --color-info: var(--c-info);
+  --color-info-soft: var(--c-info-soft);
+
+  --color-tag-red: var(--c-tag-red);
+  --color-tag-orange: var(--c-tag-orange);
+  --color-tag-yellow: var(--c-tag-yellow);
+  --color-tag-green: var(--c-tag-green);
+  --color-tag-blue: var(--c-tag-blue);
+  --color-tag-purple: var(--c-tag-purple);
+  --color-tag-gray: var(--c-tag-gray);
+
+  --color-grid-header: var(--c-grid-header);
+  --color-grid-row-alt: var(--c-grid-row-alt);
+  --color-grid-null: var(--c-grid-null);
+  --color-grid-modified: var(--c-grid-modified);
+  --color-grid-inserted: var(--c-grid-inserted);
+  --color-grid-deleted: var(--c-grid-deleted);
+
+  --color-syn-keyword: var(--c-syn-keyword);
+  --color-syn-string: var(--c-syn-string);
+  --color-syn-number: var(--c-syn-number);
+  --color-syn-comment: var(--c-syn-comment);
+  --color-syn-function: var(--c-syn-function);
+  --color-syn-operator: var(--c-syn-operator);
+  --color-syn-type: var(--c-syn-type);
+
+  --color-dialect-postgres: var(--c-dialect-postgres);
+  --color-dialect-postgres-deep: var(--c-dialect-postgres-deep);
+  --color-dialect-mssql: var(--c-dialect-mssql);
+  --color-dialect-mssql-deep: var(--c-dialect-mssql-deep);
+
+  --color-brand: var(--c-brand);
+  --color-brand-deep: var(--c-brand-deep);
+  --color-on-solid: var(--c-on-solid);
+  --color-kbd: var(--c-kbd);
+  --color-kbd-line: var(--c-kbd-line);
+  --color-glow: var(--c-glow);
+  --color-skeleton: var(--c-skeleton);
+
+  --shadow-popover: var(--shadow-popover);
+  --shadow-dialog: var(--shadow-dialog);
+  --shadow-raised: var(--shadow-raised);
+  --shadow-inset: var(--shadow-inset);
+
+  /* motion (≤150ms, see prefers-reduced-motion below) */
+  --animate-fade-in: fade-in 120ms ease-out;
+  --animate-fade-out: fade-out 100ms ease-in forwards;
+  --animate-pop-in: pop-in 130ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-pop-out: pop-out 100ms ease-in forwards;
+  --animate-dialog-in: dialog-in 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-dialog-out: dialog-out 110ms ease-in forwards;
+  --animate-sheet-in: sheet-in 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-sheet-out: sheet-out 120ms ease-in forwards;
+  --animate-sheet-in-left: sheet-in-left 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-sheet-out-left: sheet-out-left 120ms ease-in forwards;
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+  --animate-progress: progress 1.2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  --animate-pulse-soft: pulse-soft 1.4s ease-in-out infinite;
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+  @keyframes pop-in {
+    from { opacity: 0; transform: scale(0.97) translateY(var(--pop-y, -2px)); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes pop-out {
+    from { opacity: 1; transform: none; }
+    to { opacity: 0; transform: scale(0.98); }
+  }
+  @keyframes dialog-in {
+    from { opacity: 0; transform: translateY(6px) scale(0.985); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes dialog-out {
+    from { opacity: 1; transform: none; }
+    to { opacity: 0; transform: translateY(4px) scale(0.99); }
+  }
+  @keyframes sheet-in {
+    from { transform: translateX(24px); opacity: 0; }
+    to { transform: none; opacity: 1; }
+  }
+  @keyframes sheet-out {
+    from { transform: none; opacity: 1; }
+    to { transform: translateX(24px); opacity: 0; }
+  }
+  @keyframes sheet-in-left {
+    from { transform: translateX(-24px); opacity: 0; }
+    to { transform: none; opacity: 1; }
+  }
+  @keyframes sheet-out-left {
+    from { transform: none; opacity: 1; }
+    to { transform: translateX(-24px); opacity: 0; }
+  }
+  @keyframes shimmer {
+    from { background-position: 150% 0; }
+    to { background-position: -50% 0; }
+  }
+  @keyframes progress {
+    0% { transform: translateX(-100%) scaleX(0.4); }
+    50% { transform: translateX(30%) scaleX(0.6); }
+    100% { transform: translateX(110%) scaleX(0.4); }
+  }
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+
+  --text-2xs: 0.6875rem; /* 11px */
+  --text-2xs--line-height: 1rem;
+  --text-xs: 0.75rem; /* 12px */
+  --text-xs--line-height: 1.05rem;
+  --text-sm: 0.8125rem; /* 13px — base UI size */
+  --text-sm--line-height: 1.25rem;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-app font-sans text-sm text-fg antialiased;
+    overflow: hidden;
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
+  }
+
+  input,
+  textarea,
+  [contenteditable='true'],
+  .selectable {
+    user-select: text;
+  }
+
+  ::selection {
+    background: var(--c-selection);
+  }
+
+  /* Code reads literally: no ">=" → "≥" ligatures in identifiers, SQL and grids. */
+  code,
+  pre,
+  kbd,
+  .font-mono {
+    font-variant-ligatures: none;
+    font-feature-settings: 'calt' 0;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--c-focus);
+    outline-offset: -1px;
+  }
+
+  /* thin, unobtrusive scrollbars */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--c-line-strong);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--c-faint);
+  }
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
+@utility drag-region {
+  -webkit-app-region: drag;
+}
+
+@utility no-drag {
+  -webkit-app-region: no-drag;
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Animated placeholder block (see <Skeleton/>). */
+@utility skeleton {
+  background-color: var(--c-skeleton);
+  background-image: linear-gradient(90deg, transparent 0%, var(--c-skeleton-shine) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+}
+
+/* Horizontal scroller without a visible scrollbar (tab strips). */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* spinners / progress keep moving: they carry state, not decoration */
+  *:not([data-essential-motion]),
+  ::before,
+  ::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
