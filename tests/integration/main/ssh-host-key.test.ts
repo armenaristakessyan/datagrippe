@@ -6,8 +6,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import ssh2 from 'ssh2'
 import type { ConnectionConfig } from '@shared/types'
 import { openTunnel, type Tunnel } from '../../../src/main/db/tunnel'
+import { generateHostKey } from '../helpers/ssh'
 
-const { Server, utils } = ssh2
+const { Server } = ssh2
 
 describe('SSH tunnel host key verification', () => {
   let server: InstanceType<typeof Server>
@@ -16,7 +17,7 @@ describe('SSH tunnel host key verification', () => {
 
   beforeAll(async () => {
     // A brand-new, never-seen host key: an impostor bastion.
-    const key = utils.generateKeyPairSync('ed25519')
+    const key = generateHostKey()
     server = new Server({ hostKeys: [key.private] }, (client) => {
       client.on('authentication', (ctx) => {
         if (ctx.method === 'password') {

@@ -10,6 +10,7 @@ import type { ConnectionConfig, DbErrorInfo } from '@shared/types'
 import { DriverError } from '../../../src/main/db/errors'
 import { openTunnel } from '../../../src/main/db/tunnel'
 import { HostKeyStore } from '../../../src/main/store/host-keys'
+import { generateHostKey } from '../helpers/ssh'
 
 const { Server, utils } = ssh2
 const quiet = { warn: () => undefined, error: () => undefined }
@@ -22,7 +23,7 @@ interface Bastion {
 }
 
 async function bastion(port = 0): Promise<Bastion> {
-  const key = utils.generateKeyPairSync('ed25519')
+  const key = generateHostKey()
   const passwords: string[] = []
   const server = new Server({ hostKeys: [key.private] }, (client) => {
     client.on('authentication', (ctx) => {
