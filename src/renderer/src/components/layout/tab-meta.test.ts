@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import type { ConnectionConfig } from '@shared/types'
+import type { ConnectionConfig, DatabaseInfo } from '@shared/types'
 import type { Tab } from '@/stores/tabs'
-import { tabHint } from './tab-meta'
+import { firstUserDatabase, tabDatabase, tabHint } from './tab-meta'
 
 const table = (
   id: string,
@@ -47,5 +47,29 @@ describe('tabHint', () => {
     const tabs = [table('a', 'pg', 'public'), table('b', 'ms', 'dbo', 'customers', 'app', 'structure')]
     expect(tabHint(tabs[1]!, tabs, connections)).toBe('Local MSSQL · Structure')
     expect(tabHint(tabs[0]!, tabs, connections)).toBe('Local PG')
+  })
+})
+
+describe('tabDatabase', () => {
+  const pg = { id: 'pg', name: 'Local PG', database: 'app' } as ConnectionConfig
+  const consoleTab = (database?: string): Tab => ({ id: 'c', kind: 'console', title: 'Query 1', connectionId: 'pg', database }) as Tab
+
+  it("gives a console's database, else the connection's, else the first one listed", () => {
+    expect(tabDatabase(consoleTab('sales'), pg, 'other')).toBe('sales')
+    expect(tabDatabase(consoleTab(), pg, 'other')).toBe('app')
+    expect(tabDatabase(consoleTab(), { ...pg, database: '' }, 'other')).toBe('other')
+    expect(tabDatabase(consoleTab(), { ...pg, database: '' })).toBeUndefined()
+  })
+
+  it("gives a table's database, and none for server sessions", () => {
+    expect(tabDatabase(table('a', 'pg', 'public', 'orders', 'shop'), pg)).toBe('shop')
+    expect(tabDatabase({ id: 's', kind: 'sessions', title: 'Sessions', connectionId: 'pg' } as Tab, pg, 'other')).toBeUndefined()
+  })
+
+  it('prefers the first user database', () => {
+    const db = (name: string, isSystem = false) => ({ name, isSystem }) as DatabaseInfo
+    expect(firstUserDatabase([db('master', true), db('shop')])).toBe('shop')
+    expect(firstUserDatabase([db('master', true)])).toBe('master')
+    expect(firstUserDatabase(undefined)).toBeUndefined()
   })
 })

@@ -146,4 +146,48 @@ test.describe('app shell', () => {
     // The console reports the server-side cancel like its own Cancel button.
     await expect(page.getByText('Query cancelled').first()).toBeVisible()
   })
+
+  test('the title bar shows where the console works, and its buttons take clicks instead of dragging the window', async ({ dg }) => {
+    const { page } = dg
+    await dg.createConnection('postgres')
+    await dg.menu('New console')
+    const location = page.getByRole('navigation', { name: 'Location' })
+    await expect(location).toContainText(ENGINES.postgres.name)
+    await expect(location).toContainText(ENGINES.postgres.database)
+
+    // Clicks synthesized by Playwright skip the window-drag area, so replay how Chromium hands it to the OS: the
+    // boxes of the elements whose (inherited) app-region is set, in tree order, drag adding and no-drag removing.
+    const draggable = await page.evaluate(() => {
+      // Runs in the renderer, where globalThis is the window (this project has no DOM typings).
+      type Rect = { left: number; right: number; top: number; bottom: number; width: number; height: number }
+      type El = { children: ArrayLike<El>; tagName: string; getBoundingClientRect(): Rect; getAttribute(name: string): string | null }
+      type Style = { getPropertyValue(name: string): string; display: string; visibility: string }
+      type Win = { document: { querySelector(selector: string): El | null }; getComputedStyle(el: El): Style }
+      const win = globalThis as unknown as Win
+      const header = win.document.querySelector('header')
+      const mode = (style: Style) => style.getPropertyValue('app-region') || style.getPropertyValue('-webkit-app-region')
+      if (!header || mode(win.getComputedStyle(header)) !== 'drag') return ['the title bar app-region is not readable']
+      const regions: { drag: boolean; rect: Rect }[] = []
+      const buttons: El[] = []
+      const walk = (el: El) => {
+        const style = win.getComputedStyle(el)
+        const rect = el.getBoundingClientRect()
+        const box = style.display !== 'inline' || el.tagName.toLowerCase() === 'svg'
+        const m = mode(style)
+        if ((m === 'drag' || m === 'no-drag') && box && style.visibility === 'visible' && rect.width > 0 && rect.height > 0) regions.push({ drag: m === 'drag', rect })
+        if (el.tagName === 'BUTTON' && rect.width > 0) buttons.push(el)
+        for (const child of Array.from(el.children)) walk(child)
+      }
+      walk(header)
+      const dragsAt = (x: number, y: number) =>
+        regions.reduce((drag, { drag: d, rect: r }) => (x >= r.left && x < r.right && y >= r.top && y < r.bottom ? d : drag), false)
+      return buttons
+        .filter((button) => {
+          const r = button.getBoundingClientRect()
+          return dragsAt(r.left + r.width / 2, r.top + r.height / 2)
+        })
+        .map((button) => button.getAttribute('aria-label') ?? 'Search')
+    })
+    expect(draggable).toEqual([])
+  })
 })

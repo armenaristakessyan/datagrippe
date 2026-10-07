@@ -1,12 +1,13 @@
-import { ChevronRight, History, PanelLeft, Search, Settings2 } from 'lucide-react'
-import { ColorTag, IconButton, Kbd } from '@/components/ui'
+import { ChevronRight, Database, History, Lock, PanelLeft, Search, Settings2, ShieldAlert } from 'lucide-react'
+import { ColorTag, DialectIcon, IconButton, Kbd } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { isMac } from '@/lib/platform'
 import { MENU_ACCELERATORS } from '@/lib/shortcuts'
 import { useConnections } from '@/stores/connections'
+import { useExplorer } from '@/stores/explorer'
 import { useTabs } from '@/stores/tabs'
 import { useUi } from '@/stores/ui'
-import { tabCrumbs } from './tab-meta'
+import { firstUserDatabase, tabDatabase } from './tab-meta'
 
 /** Width reserved for the macOS traffic lights (hiddenInset title bar). */
 const MAC_TRAFFIC_LIGHTS = 78
@@ -20,6 +21,9 @@ export function TitleBar() {
   const setSettingsOpen = useUi((s) => s.setSettingsOpen)
 
   return (
+    // The bar drags the window. Every descendant inherits `drag` and adds its own box to the drag area, in tree
+    // order: a box spanning the bar placed after a no-drag control would make that control drag the window instead
+    // of taking clicks. Keep each child to its own box.
     <header
       className="drag-region relative flex h-10 shrink-0 items-center border-b border-line bg-panel pr-2"
       style={{ paddingLeft: mac ? MAC_TRAFFIC_LIGHTS : 8 }}
@@ -32,24 +36,22 @@ export function TitleBar() {
           onClick={toggleSidebar}
         />
       </div>
-      <Breadcrumb />
+      <Location />
 
-      {/* centered search trigger; absolutely placed so the breadcrumb width never shifts it */}
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <button
-          type="button"
-          onClick={() => openPalette('commands')}
-          className={cn(
-            'no-drag pointer-events-auto flex h-[26px] w-[min(420px,36vw)] items-center gap-2 rounded-md border border-line bg-input px-2.5 text-left text-xs text-subtle shadow-inset outline-none',
-            'transition-[border-color,background-color,color] duration-100 hover:border-line-strong hover:bg-hover hover:text-muted',
-            'focus-visible:ring-2 focus-visible:ring-focus',
-          )}
-        >
-          <Search size={13} strokeWidth={1.75} className="shrink-0" />
-          <span className="flex-1 truncate">Search or run a command…</span>
-          <Kbd shortcut={MENU_ACCELERATORS['command-palette']} />
-        </button>
-      </div>
+      {/* centered search trigger; absolutely placed so the location width never shifts it */}
+      <button
+        type="button"
+        onClick={() => openPalette('commands')}
+        className={cn(
+          'no-drag absolute top-1/2 left-1/2 flex h-[26px] w-[min(420px,36vw)] -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-md border border-line bg-input px-2.5 text-left text-xs text-subtle shadow-inset outline-none',
+          'transition-[border-color,background-color,color] duration-100 hover:border-line-strong hover:bg-hover hover:text-muted',
+          'focus-visible:ring-2 focus-visible:ring-focus',
+        )}
+      >
+        <Search size={13} strokeWidth={1.75} className="shrink-0" />
+        <span className="flex-1 truncate">Search or run a command…</span>
+        <Kbd shortcut={MENU_ACCELERATORS['command-palette']} />
+      </button>
 
       <div className="no-drag relative ml-auto flex items-center gap-0.5">
         <IconButton icon={History} label="Query history" shortcut={MENU_ACCELERATORS['open-history']} onClick={() => setHistoryOpen(true)} />
@@ -60,42 +62,43 @@ export function TitleBar() {
 }
 
 /**
- * connection › database › … › object. Space is capped so the centred search never overlaps it; when
- * short, the middle crumbs collapse to "…" first and the last crumb (what is open) shrinks last.
+ * Where the active tab works, readable at a glance: connection › database in a chip, tinted red for a production
+ * connection. Space is capped so the centred search never overlaps it; the "Production" label gives way first.
  */
-function Breadcrumb() {
+function Location() {
   const tab = useTabs((s) => s.tabs.find((t) => t.id === s.activeTabId))
   const connection = useConnections((s) => (tab ? s.connections.find((c) => c.id === tab.connectionId) : undefined))
+  const firstDatabase = useExplorer((s) => (tab ? firstUserDatabase(s.databases[tab.connectionId]?.data) : undefined))
   if (!tab) return null
-  const crumbs = tabCrumbs(tab, connection)
-  const last = crumbs[crumbs.length - 1]
-  const middle = crumbs.slice(0, -1)
-  const separator = <ChevronRight size={12} strokeWidth={2} className="shrink-0 text-faint" aria-hidden />
+  const database = tabDatabase(tab, connection, firstDatabase)
+  const production = connection?.productionGuard === true
   return (
-    <nav aria-label="Location" className="@container relative ml-1.5 flex min-w-0 max-w-[calc(50%-300px)] flex-1">
-      <div className="flex min-w-0 items-center gap-1 text-xs text-subtle @max-[120px]:hidden">
-        <span className="flex min-w-10 shrink items-center gap-1.5 text-muted">
-          <ColorTag color={connection?.color} />
-          <span className="max-w-40 truncate font-medium">{connection?.name ?? 'Unknown connection'}</span>
-        </span>
-        {middle.map((crumb, i) => (
-          <span key={i} className="flex min-w-0 shrink-[4] items-center gap-1 @max-[280px]:hidden">
-            {separator}
-            <span className="truncate">{crumb}</span>
-          </span>
-        ))}
-        {middle.length > 0 && (
-          <span className="hidden shrink-0 items-center gap-1 @max-[280px]:flex" title={middle.join(' › ')}>
-            {separator}
-            <span aria-hidden>…</span>
+    <nav aria-label="Location" className="@container ml-1.5 flex min-w-0 max-w-[calc(50%-300px)] flex-1 items-center">
+      <div
+        className={cn(
+          'flex h-[26px] min-w-0 items-center gap-1.5 rounded-md border px-2 text-xs @max-[120px]:hidden',
+          production ? 'border-danger/40 bg-danger-soft' : 'border-line bg-elevated',
+        )}
+      >
+        {connection && <DialectIcon dialect={connection.dialect} size={14} />}
+        <span className="min-w-8 max-w-40 shrink truncate font-medium text-fg">{connection?.name ?? 'Unknown connection'}</span>
+        <ColorTag color={connection?.color} size={7} />
+        {database && (
+          <>
+            <ChevronRight size={12} strokeWidth={2} className="shrink-0 text-faint" aria-hidden />
+            <Database size={13} strokeWidth={1.75} className="shrink-0 text-muted" aria-hidden />
+            <span className="min-w-8 shrink-[2] truncate font-mono font-medium text-fg">{database}</span>
+          </>
+        )}
+        {production && (
+          <span className="flex shrink-0 items-center gap-1 pl-0.5 font-medium text-danger">
+            <ShieldAlert size={12} strokeWidth={2} aria-label="Production" />
+            <span className="@max-[300px]:hidden" aria-hidden>
+              Production
+            </span>
           </span>
         )}
-        {last !== undefined && (
-          <span className="flex min-w-0 max-w-[min(12rem,65%)] shrink-0 items-center gap-1">
-            {separator}
-            <span className="truncate text-fg">{last}</span>
-          </span>
-        )}
+        {connection?.readOnly && <Lock size={12} strokeWidth={2} className="shrink-0 text-warning" aria-label="Read-only" />}
       </div>
     </nav>
   )

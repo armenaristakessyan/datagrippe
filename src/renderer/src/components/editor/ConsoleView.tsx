@@ -8,6 +8,7 @@ import { useCatalog } from '@/stores/catalog'
 import { useConnections } from '@/stores/connections'
 import { useConsoles } from '@/stores/consoles'
 import { dbKey, useExplorer } from '@/stores/explorer'
+import { firstUserDatabase, tabDatabase } from '@/components/layout/tab-meta'
 import { useTabs, type ConsoleTab } from '@/stores/tabs'
 import { explainConsole, registerResultsController, runConsole } from './console-actions'
 import { retainConsoleCommands } from './console-commands'
@@ -34,12 +35,9 @@ export function ConsoleView({ tab }: { tab: ConsoleTab }) {
   const connection = useConnections((s) => s.connections.find((c) => c.id === tab.connectionId))
   const connectionStatus = useConnections((s) => s.runtime[tab.connectionId]?.status ?? 'disconnected')
   const runtime = useConsoles((s) => s.runtime(tab.id))
-  const firstDatabase = useExplorer((s) => {
-    const dbs = s.databases[tab.connectionId]?.data
-    return dbs?.find((d) => !d.isSystem)?.name ?? dbs?.[0]?.name
-  })
+  const firstDatabase = useExplorer((s) => firstUserDatabase(s.databases[tab.connectionId]?.data))
   const dialect = connection?.dialect ?? 'postgres'
-  const database = tab.database ?? (connection?.database || firstDatabase)
+  const database = tabDatabase(tab, connection, firstDatabase)
 
   useEffect(() => retainConsoleCommands(), [])
 

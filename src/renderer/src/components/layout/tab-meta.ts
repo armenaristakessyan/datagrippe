@@ -1,5 +1,5 @@
 import { Activity, Columns3, SquareTerminal, Table2 } from 'lucide-react'
-import type { ConnectionConfig } from '@shared/types'
+import type { ConnectionConfig, DatabaseInfo } from '@shared/types'
 import type { IconLike } from '@/components/ui'
 import type { Tab } from '@/stores/tabs'
 
@@ -17,17 +17,19 @@ export const TAB_KIND_LABEL: Record<Tab['kind'], string> = {
   sessions: 'Server sessions',
 }
 
-/** Crumbs after the connection name: database › object. */
-export function tabCrumbs(tab: Tab, connection: ConnectionConfig | undefined): string[] {
-  if (tab.kind === 'console') {
-    const db = tab.database ?? connection?.database
-    const crumbs = db ? [db] : []
-    if (tab.schema) crumbs.push(tab.schema)
-    crumbs.push(tab.title)
-    return crumbs
-  }
-  if (tab.kind === 'sessions') return [tab.title]
-  return [tab.database, `${tab.table.schema}.${tab.table.name}`]
+/**
+ * The database a tab works in: a console's own, else its connection's default, else `firstDatabase` (for a
+ * connection that names none). Undefined for the server sessions view.
+ */
+export function tabDatabase(tab: Tab, connection: ConnectionConfig | undefined, firstDatabase?: string): string | undefined {
+  if (tab.kind === 'console') return tab.database ?? (connection?.database || firstDatabase)
+  if (tab.kind === 'sessions') return undefined
+  return tab.database
+}
+
+/** The first user database the explorer lists (a console's database when the connection names none). */
+export function firstUserDatabase(databases: readonly DatabaseInfo[] | undefined): string | undefined {
+  return databases?.find((d) => !d.isSystem)?.name ?? databases?.[0]?.name
 }
 
 /** Text used by "Copy name": qualified object for table tabs, the title for consoles. */
