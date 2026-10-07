@@ -5,6 +5,7 @@ import { SessionsView } from '@/components/sessions/SessionsView'
 import { TableDataView } from '@/components/table/TableDataView'
 import { TableStructureView } from '@/components/table/TableStructureView'
 import { Button, EmptyState, ErrorBoundary } from '@/components/ui'
+import { cn } from '@/lib/cn'
 import { useTabs, type Tab } from '@/stores/tabs'
 
 /**
@@ -19,7 +20,8 @@ export function TabContent() {
   const consoles = useMemo(() => tabs.filter((t) => t.kind === 'console').sort((a, b) => (a.id < b.id ? -1 : 1)), [tabs])
 
   return (
-    <div className="relative min-h-0 flex-1 bg-surface">
+    // The bottom of the open tab's panel; a console draws its own (editor panel, then results panel).
+    <div className={cn('relative min-h-0 flex-1', active?.kind !== 'console' && 'overflow-hidden rounded-b-lg bg-surface')}>
       {consoles.map((tab) =>
         tab.kind === 'console' ? (
           <div

@@ -66,7 +66,7 @@ lives in `@/lib/shortcuts` (`formatShortcut`, `shortcutTokens`, `MENU_ACCELERATO
 | `Badge` | `tone` neutral · accent · success · warning · danger · info · outline, `icon`, `size` sm · md, `mono` | `<Badge tone="warning">Read-only</Badge>` |
 | `StatusDot` | `status` (`ConnectionStatus` or success · warning · danger · info · neutral), `size` (7), `halo`, `label`; `connecting` pulses | `<StatusDot status={runtime.status} />` |
 | `ColorTag` | `color: ConnectionColor`, `variant` dot · square · bar (3px stripe), `size`, `showNone`; `connectionColorVar(color)` returns the CSS colour | `<ColorTag color={c.color} />` |
-| `DialectIcon` | `dialect`, `size` (16), `variant` tile · glyph, `title` (`''` = decorative) | `<DialectIcon dialect="mssql" size={20} />` |
+| `DialectIcon` | `dialect`, `size` (16), `title` (`''` = decorative); engine logos from `assets/dialects/` (128 px PNG) | `<DialectIcon dialect="mssql" size={20} />` |
 | `Spinner` | `size` (14), `label` | `<Spinner className="text-subtle" />` |
 | `ProgressBar` | `value` 0..1 (omit = indeterminate 2px bar), `tone` accent · warning · danger | `{running && <ProgressBar className="absolute inset-x-0 top-0" />}` |
 | `Skeleton`, `SkeletonLines` | `width`, `height`, `className` / `count` | `<SkeletonLines count={6} className="p-3" />` |

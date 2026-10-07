@@ -103,7 +103,14 @@ tests/integration/  driver + session-manager tests against the docker test datab
   controls 26–28px tall, toolbar icons 14–16px (`lucide-react`, `strokeWidth` 1.75–2).
 - Radii `rounded-md` (controls), `rounded-lg` (popovers), `rounded-xl` (dialogs). Popovers use `shadow-popover`,
   dialogs `shadow-dialog`. Borders are 1px `border-line`; avoid heavy boxes, prefer spacing and subtle dividers.
-- Code, identifiers and grid cells use `font-mono`; numbers in tables use `tabular`.
+- Layout and palettes follow JetBrains' Islands themes (DataGrip): the window frame (`bg-app`: title bar, tool
+  stripes, status bar) shows around and between rounded panels (`rounded-lg`, `bg-panel` / `bg-surface`), which
+  `SplitHandle variant="gap"` separates; a console is two panels (tabs, toolbar and editor, then results). `Sheet`
+  tool windows open between the title bar and the status bar, next to a tool stripe.
+- The title bar drags the window: descendants inherit its app-region and Chromium hands the boxes to the OS in tree
+  order, so keep each child to its own box (no full-width overlay after a `no-drag` control) and keep overlays out of
+  it. `shell.spec.ts` replays that computation for the title bar and the query history buttons.
+- Code, identifiers and grid cells use `font-mono` (code text in `text-code`); numbers in tables use `tabular`.
 - Every view handles loading, empty and error states. Keyboard-first: every action reachable from the
   command palette, focus rings visible (`focus-visible`).
 - Motion is subtle (≤150ms opacity/transform). Respect `prefers-reduced-motion`.

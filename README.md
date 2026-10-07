@@ -279,3 +279,8 @@ tests/           Integration tests against the docker databases, Playwright end-
 - CSV import uses batched `INSERT` statements, not `COPY` / bulk insert, so very large files are slower than
   a native loader.
 - Snippets are managed from the palette (*Insert snippet…*); there is no Settings page for them yet.
+
+## Credits
+
+The PostgreSQL elephant is a trademark of the PostgreSQL Community Association; the SQL Server logo is a trademark
+of Microsoft. Both are only used to tell the two engines apart.

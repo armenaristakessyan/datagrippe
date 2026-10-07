@@ -221,7 +221,7 @@ export function ResultsPanel({ tabId }: { tabId: string }) {
 
   return (
     <section aria-label="Results" className="flex h-full min-h-0 flex-col bg-surface">
-      <header className="flex h-8 shrink-0 items-stretch border-b border-line bg-panel">
+      <header className="flex h-9 shrink-0 items-stretch bg-panel pl-1">
         {hasContent ? (
           <ResultTabs
             execution={execution}

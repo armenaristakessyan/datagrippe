@@ -369,7 +369,7 @@ function ExplorerTree() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex shrink-0 items-center gap-1 border-b border-line px-2 py-1.5">
+      <div className="flex shrink-0 items-center gap-1 px-2 pb-1.5">
         <Input
           ref={filterRef}
           size="sm"

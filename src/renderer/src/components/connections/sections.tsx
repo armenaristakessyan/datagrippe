@@ -34,8 +34,8 @@ import { ColorPicker, GroupInput, PathInput, SecretInput } from './controls'
 import { VaultFields, type VaultFieldsProps } from './VaultFields'
 
 /**
- * The one name of `productionGuard` across the app: this switch, the rail icon, the console toolbar's
- * "Production" badge and the global setting that gates it.
+ * The one name of `productionGuard` across the app: this switch, the rail icon, the explorer's shield and the
+ * global setting that gates it.
  */
 export const PRODUCTION_LABEL = 'Production connection'
 
@@ -591,7 +591,7 @@ export function AdvancedSection({ form, setForm, errors }: SectionProps) {
         checked={form.productionGuard}
         onCheckedChange={(productionGuard) => patch({ productionGuard })}
         label={PRODUCTION_LABEL}
-        description="Consoles show a Production badge and ask before DROP, TRUNCATE, and DELETE or UPDATE without a WHERE clause (see Settings › Query)."
+        description="Consoles ask before DROP, TRUNCATE, and DELETE or UPDATE without a WHERE clause (see Settings › Query)."
       />
     </div>
   )

@@ -278,7 +278,7 @@ export const ExplorerRow = memo(function ExplorerRow({ row, domId, selected, run
       onDoubleClick={() => handlers.onActivate(row)}
       onContextMenu={() => handlers.onContextMenu(row)}
       className={cn(
-        'absolute inset-x-0 flex cursor-default select-none items-center gap-1.5 pr-2 text-sm',
+        'absolute inset-x-1.5 flex cursor-default select-none items-center gap-1.5 rounded-md pr-2 text-sm',
         'hover:bg-hover',
         selected && 'bg-active group-focus-within/tree:bg-selection hover:bg-active',
       )}

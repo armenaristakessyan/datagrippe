@@ -150,11 +150,10 @@ export function ResultTabs({ execution, dialect, current, showPlan, planLoading,
             title={t.title}
             onClick={() => onSelect(t.id)}
             className={cn(
-              'relative flex shrink-0 items-center gap-1.5 whitespace-nowrap px-2.5 text-xs outline-none transition-colors duration-100',
-              'focus-visible:bg-hover focus-visible:text-fg',
-              selected ? 'text-fg' : 'text-subtle hover:text-muted',
-              selected && 'after:absolute after:inset-x-2 after:bottom-0 after:h-[1.5px] after:rounded-full',
-              selected && (t.tone === 'danger' ? 'after:bg-danger' : 'after:bg-accent'),
+              'relative my-1 mr-0.5 flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 text-xs outline-none transition-colors duration-100',
+              'focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-inset',
+              selected ? 'bg-active text-fg' : 'text-subtle hover:bg-hover hover:text-muted',
+              selected && t.tone === 'danger' && 'bg-danger-soft',
             )}
           >
             <span className={cn('flex shrink-0', !selected && t.tone !== 'danger' && 'opacity-70')}>{t.icon}</span>

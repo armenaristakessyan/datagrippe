@@ -23,11 +23,28 @@ export function SplitPanel({ className, ...rest }: SplitPanelProps) {
 export interface SplitHandleProps extends ComponentProps<typeof Separator> {
   /** Direction of the line (matches the parent group's orientation: horizontal group → vertical line). */
   direction?: 'vertical' | 'horizontal'
+  /** line: a hairline between two panes (default); gap: the frame showing between two rounded panels. */
+  variant?: 'line' | 'gap'
 }
 
 /** 1px hairline that highlights in the accent colour on hover / drag / focus (hit area is wider). */
-export function SplitHandle({ direction = 'vertical', className, ...rest }: SplitHandleProps) {
+export function SplitHandle({ direction = 'vertical', variant = 'line', className, ...rest }: SplitHandleProps) {
   const vertical = direction === 'vertical'
+  if (variant === 'gap') {
+    return (
+      <Separator
+        className={cn(
+          'group relative z-10 shrink-0 outline-none',
+          vertical ? 'w-1.5' : 'h-1.5',
+          'after:absolute after:rounded-full after:transition-colors after:duration-150',
+          vertical ? 'after:inset-y-2 after:left-[2px] after:w-[2px]' : 'after:inset-x-2 after:top-[2px] after:h-[2px]',
+          'data-[separator=hover]:after:bg-accent/50 data-[separator=active]:after:bg-accent data-[separator=focus]:after:bg-accent',
+          className,
+        )}
+        {...rest}
+      />
+    )
+  }
   return (
     <Separator
       className={cn(

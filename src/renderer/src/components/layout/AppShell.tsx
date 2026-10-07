@@ -18,6 +18,7 @@ import { StatusBar } from './StatusBar'
 import { TabBar } from './TabBar'
 import { TabContent } from './TabContent'
 import { TitleBar } from './TitleBar'
+import { ToolStripe } from './ToolStripe'
 import { useGlobalCommands } from './useGlobalCommands'
 import { WelcomeScreen } from './WelcomeScreen'
 
@@ -57,9 +58,11 @@ export function AppShell() {
   }, [sidebarVisible, panel])
 
   return (
+    // The window frame (bg-app) shows around and between the rounded panels, as in JetBrains' Islands themes.
     <div className="flex h-full flex-col bg-app text-fg">
       <TitleBar />
       <div className="flex min-h-0 flex-1">
+        <ToolStripe side="left" />
         <SplitGroup
           orientation="horizontal"
           onLayoutChanged={(_layout, meta) => {
@@ -86,11 +89,12 @@ export function AppShell() {
           >
             <Sidebar />
           </SplitPanel>
-          <SplitHandle direction="vertical" />
+          <SplitHandle direction="vertical" variant="gap" />
           <SplitPanel id="main" minSize={420}>
             <Main />
           </SplitPanel>
         </SplitGroup>
+        <ToolStripe side="right" />
       </div>
       <StatusBar />
 
@@ -109,8 +113,10 @@ export function AppShell() {
 function Main() {
   const hasTabs = useTabs((s) => s.tabs.length > 0)
   return (
+    // No background of its own: the tab strip and the views draw their panels (a console splits into an editor
+    // panel and a results panel).
     <main
-      className="flex h-full min-w-0 flex-col bg-surface"
+      className="flex h-full min-w-0 flex-col"
       // Working in a tab makes its connection the target of the next "New console".
       onPointerDownCapture={() => markRegion('workspace')}
       onKeyDownCapture={() => markRegion('workspace')}
@@ -121,7 +127,9 @@ function Main() {
           <TabContent />
         </>
       ) : (
-        <WelcomeScreen />
+        <div className="min-h-0 flex-1 overflow-hidden rounded-lg bg-surface">
+          <WelcomeScreen />
+        </div>
       )}
     </main>
   )

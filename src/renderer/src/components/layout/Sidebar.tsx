@@ -6,12 +6,12 @@ export function Sidebar() {
   return (
     <aside
       aria-label="Database explorer"
-      className="flex h-full min-w-0 flex-col bg-panel"
+      className="flex h-full min-w-0 flex-col overflow-hidden rounded-lg bg-panel"
       onPointerDownCapture={() => markRegion('explorer')}
       onKeyDownCapture={() => markRegion('explorer')}
     >
-      <div className="flex h-9 shrink-0 items-center border-b border-line px-3">
-        <h2 className="text-2xs font-semibold uppercase tracking-[0.08em] text-subtle">Connections</h2>
+      <div className="flex h-10 shrink-0 items-center px-3">
+        <h2 className="text-sm font-semibold text-fg">Database Explorer</h2>
       </div>
       <div className="relative min-h-0 flex-1">
         <ErrorBoundary

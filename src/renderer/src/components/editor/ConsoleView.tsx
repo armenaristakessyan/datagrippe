@@ -92,7 +92,8 @@ export function ConsoleView({ tab }: { tab: ConsoleTab }) {
   )
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-surface">
+    // Two panels: the tab strip, toolbar and editor on top, the results below (the frame shows between them).
+    <div className="flex h-full min-h-0 flex-col">
       <ConsoleToolbar
         tab={tab}
         connection={connection}
@@ -110,7 +111,7 @@ export function ConsoleView({ tab }: { tab: ConsoleTab }) {
             if (meta.isUserInteraction) useTabs.getState().setLayout(LAYOUT_KEY, meta.requestedLayout ?? layout)
           }}
         >
-          <SplitPanel id={EDITOR_PANEL} minSize="20" className="relative">
+          <SplitPanel id={EDITOR_PANEL} minSize="20" className="relative overflow-hidden rounded-b-lg bg-surface">
             <SqlEditor tab={tab} dialect={dialect} database={database} actions={actions} />
             {connection && (
               <ConnectionChip
@@ -119,7 +120,7 @@ export function ConsoleView({ tab }: { tab: ConsoleTab }) {
               />
             )}
           </SplitPanel>
-          <SplitHandle direction="horizontal" />
+          <SplitHandle direction="horizontal" variant="gap" />
           <SplitPanel
             id={RESULTS_PANEL}
             defaultSize="40"
@@ -130,7 +131,7 @@ export function ConsoleView({ tab }: { tab: ConsoleTab }) {
             onResize={(size) => setCollapsed(size.inPixels < 1)}
           >
             {/* The results panel owns runtime.error (banner over results, or the failure view). */}
-            <div className="flex h-full min-h-0 flex-col bg-surface">
+            <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg bg-surface">
               <div className="min-h-0 flex-1">
                 <ResultsPanel tabId={tab.id} />
               </div>

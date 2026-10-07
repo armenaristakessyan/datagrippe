@@ -146,7 +146,8 @@ export function TabBar() {
   )
 
   return (
-    <div className="flex h-9 shrink-0 items-stretch border-b border-line bg-panel">
+    // The top of the panel that holds the open tab (rounded like the explorer's panel).
+    <div className="flex h-10 shrink-0 items-stretch rounded-t-lg bg-panel pl-1">
       <div className="relative flex min-w-0 flex-1">
         <div
           ref={scroller}
@@ -322,29 +323,23 @@ function TabItem({ tab, active, dropSide, onDragStart, onDragEnd, onDragOver, on
             }
           }}
           className={cn(
-            'group relative flex h-full min-w-[104px] max-w-[220px] shrink-0 cursor-default select-none items-center gap-1.5 border-r border-line pl-3 pr-1.5 text-xs outline-none',
+            'group relative my-1.5 mr-0.5 flex min-w-[104px] max-w-[240px] shrink-0 cursor-default select-none items-center gap-1.5 rounded-md pl-2.5 pr-1 text-[13px] outline-none',
             'transition-colors duration-100 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus',
-            active ? 'bg-surface text-fg' : 'text-subtle hover:bg-hover hover:text-muted',
+            active ? 'bg-tab-active text-fg ring-1 ring-tab-active-line ring-inset' : 'text-muted hover:bg-hover hover:text-fg',
           )}
         >
-          {/* active: cover the strip's bottom hairline so the tab merges into the content */}
-          {active && <span aria-hidden className="absolute inset-x-0 -bottom-px h-px bg-surface" />}
-          {/* connection colour stripe */}
-          {(active || color) && (
-            <span
-              aria-hidden
-              className={cn('absolute inset-x-0 top-0 h-[2px]', !active && 'opacity-55')}
-              style={{ background: color ?? 'var(--c-accent)' }}
-            />
+          {/* connection colour */}
+          {color && (
+            <span aria-hidden className={cn('absolute inset-x-2.5 bottom-0 h-[2px] rounded-full', !active && 'opacity-60')} style={{ background: color }} />
           )}
           {dropSide && (
             <span aria-hidden className={cn('absolute inset-y-1.5 z-10 w-[2px] rounded-full bg-accent', dropSide === 'before' ? '-left-px' : '-right-px')} />
           )}
-          <span className={cn('flex shrink-0', active ? 'text-muted' : 'text-faint group-hover:text-subtle')}>
+          <span className={cn('flex shrink-0', active ? 'text-muted' : 'text-subtle')}>
             {renderIcon(TAB_KIND_ICON[tab.kind], 14)}
           </span>
           <span className="min-w-0 flex-1 truncate">
-            <span className="font-medium">{tab.title}</span>
+            <span>{tab.title}</span>
             {hint && <span className="ml-1.5 font-normal text-subtle">{hint}</span>}
           </span>
           {tab.pinned ? (

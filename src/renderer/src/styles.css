@@ -6,75 +6,84 @@
  * Design tokens. Components must use these semantic utilities (bg-panel, text-muted,
  * border-line, …) — never raw Tailwind palette colors (bg-zinc-800) — so both themes work.
  * Dark is the default; `.light` on <html> switches the palette.
+ *
+ * The palettes follow JetBrains' "Islands" themes (DataGrip): a light window frame (title bar, tool stripe,
+ * status bar, the gaps between panels) around darker rounded panels.
  */
 
 :root {
   color-scheme: dark;
 
   /* surfaces */
-  --c-app: #0d0e11; /* window background, behind everything */
-  --c-panel: #131519; /* sidebar, tab strips, toolbars */
-  --c-surface: #17191e; /* editor, grids, main content */
-  --c-elevated: #1d2026; /* popovers, menus, dialogs */
-  --c-overlay: rgb(5 6 8 / 0.62); /* modal backdrop */
-  --c-hover: rgb(255 255 255 / 0.045);
-  --c-active: rgb(255 255 255 / 0.08);
-  --c-input: rgb(255 255 255 / 0.035);
+  --c-app: #26282c; /* window frame: title bar, tool stripe, status bar, gaps between panels */
+  --c-panel: #181a1c; /* panels: sidebar, tab strips, toolbars */
+  --c-surface: #181a1c; /* editor, grids, main content */
+  --c-elevated: #2b2d30; /* popovers, menus, dialogs */
+  --c-overlay: rgb(0 0 0 / 0.55); /* modal backdrop */
+  --c-hover: rgb(255 255 255 / 0.05);
+  --c-active: rgb(255 255 255 / 0.1);
+  --c-input: rgb(255 255 255 / 0.03);
 
   /* lines */
-  --c-line: rgb(255 255 255 / 0.07);
-  --c-line-strong: rgb(255 255 255 / 0.13);
-  --c-focus: rgb(124 140 255 / 0.55);
+  --c-line: rgb(255 255 255 / 0.08);
+  --c-line-strong: rgb(255 255 255 / 0.14);
+  --c-focus: rgb(53 116 240 / 0.75);
 
   /* text */
-  --c-fg: #e7e9ee;
-  --c-muted: #a0a6b2;
+  --c-fg: #dfe1e5;
+  --c-muted: #b4b8bf;
   /* subtle: secondary text, ≥4.5:1 on every surface (app, panel, surface, elevated). faint: decoration only (separators, icons, placeholders), never information. */
-  --c-subtle: #858c99;
-  --c-faint: #5d6370;
+  --c-subtle: #9497a0;
+  --c-faint: #5f6268;
+  /* code in the editor and the grids */
+  --c-code: #bcbec4;
 
   /* accent */
-  --c-accent: #7c8cff;
-  --c-accent-hover: #8f9dff;
-  --c-accent-fg: #0b0c10;
-  --c-accent-soft: rgb(124 140 255 / 0.14);
-  --c-selection: rgb(124 140 255 / 0.22);
+  --c-accent: #3574f0;
+  --c-accent-hover: #4a83f2;
+  --c-accent-fg: #ffffff;
+  --c-accent-soft: rgb(53 116 240 / 0.18);
+  --c-selection: rgb(53 116 240 / 0.36);
+
+  /* the active editor tab */
+  --c-tab-active: #233659;
+  --c-tab-active-line: rgb(53 116 240 / 0.5);
 
   /* status */
-  --c-success: #3ecf8e;
-  --c-success-soft: rgb(62 207 142 / 0.13);
-  --c-warning: #f0b429;
-  --c-warning-soft: rgb(240 180 41 / 0.13);
-  --c-danger: #f2555a;
-  --c-danger-soft: rgb(242 85 90 / 0.13);
-  --c-info: #4fb3ff;
-  --c-info-soft: rgb(79 179 255 / 0.13);
+  --c-success: #5fad65;
+  --c-success-soft: rgb(95 173 101 / 0.15);
+  --c-warning: #f2c55c;
+  --c-warning-soft: rgb(242 197 92 / 0.14);
+  --c-danger: #f75464;
+  --c-danger-soft: rgb(247 84 100 / 0.15);
+  --c-info: #548af7;
+  --c-info-soft: rgb(84 138 247 / 0.15);
 
   /* connection tags */
-  --c-tag-red: #f2555a;
-  --c-tag-orange: #f28c38;
-  --c-tag-yellow: #e8c547;
-  --c-tag-green: #3ecf8e;
-  --c-tag-blue: #4fb3ff;
-  --c-tag-purple: #b07cff;
-  --c-tag-gray: #8a909c;
+  --c-tag-red: #f75464;
+  --c-tag-orange: #e5986c;
+  --c-tag-yellow: #f2c55c;
+  --c-tag-green: #5fad65;
+  --c-tag-blue: #548af7;
+  --c-tag-purple: #b189f5;
+  --c-tag-gray: #868a91;
 
   /* data grid */
-  --c-grid-header: #15171b;
-  --c-grid-row-alt: rgb(255 255 255 / 0.018);
-  --c-grid-null: #5d6370;
-  --c-grid-modified: rgb(240 180 41 / 0.16);
-  --c-grid-inserted: rgb(62 207 142 / 0.12);
-  --c-grid-deleted: rgb(242 85 90 / 0.12);
+  --c-grid-header: #232528;
+  --c-grid-row-alt: rgb(255 255 255 / 0);
+  --c-grid-null: #6f737a;
+  --c-grid-modified: rgb(242 197 92 / 0.16);
+  --c-grid-inserted: rgb(95 173 101 / 0.14);
+  --c-grid-deleted: rgb(247 84 100 / 0.14);
 
   /* syntax (shared by Monaco themes and inline SQL previews) */
-  --c-syn-keyword: #9d8cff;
-  --c-syn-string: #7ed4a6;
-  --c-syn-number: #f5a97f;
-  --c-syn-comment: #5f6675;
-  --c-syn-function: #6cc4ff;
-  --c-syn-operator: #c2c8d4;
-  --c-syn-type: #f0c674;
+  --c-syn-keyword: #cf8e6d;
+  --c-syn-string: #6aab73;
+  --c-syn-number: #2aacb8;
+  --c-syn-comment: #7a7e85;
+  --c-syn-function: #56a8f5;
+  --c-syn-operator: #bcbec4;
+  --c-syn-type: #cf8e6d;
 
   /* dialect marks */
   --c-dialect-postgres: #5b9be6;
@@ -88,76 +97,80 @@
   --c-on-solid: #ffffff;
 
   /* misc */
-  --c-kbd: rgb(255 255 255 / 0.06);
-  --c-kbd-line: rgb(255 255 255 / 0.1);
-  --c-glow: rgb(124 140 255 / 0.16);
+  --c-kbd: rgb(255 255 255 / 0.07);
+  --c-kbd-line: rgb(255 255 255 / 0.11);
+  --c-glow: rgb(53 116 240 / 0.18);
   --c-skeleton: rgb(255 255 255 / 0.05);
   --c-skeleton-shine: rgb(255 255 255 / 0.09);
 
-  --shadow-popover: 0 0 0 1px rgb(255 255 255 / 0.06), 0 12px 32px -8px rgb(0 0 0 / 0.6), 0 4px 12px -4px rgb(0 0 0 / 0.4);
-  --shadow-dialog: 0 0 0 1px rgb(255 255 255 / 0.07), 0 24px 64px -12px rgb(0 0 0 / 0.7);
-  --shadow-raised: 0 0 0 1px rgb(255 255 255 / 0.05), 0 1px 2px rgb(0 0 0 / 0.4);
-  --shadow-inset: inset 0 1px 0 rgb(255 255 255 / 0.04);
+  --shadow-popover: 0 0 0 1px rgb(255 255 255 / 0.09), 0 12px 32px -8px rgb(0 0 0 / 0.6), 0 4px 12px -4px rgb(0 0 0 / 0.4);
+  --shadow-dialog: 0 0 0 1px rgb(255 255 255 / 0.1), 0 24px 64px -12px rgb(0 0 0 / 0.7);
+  --shadow-raised: 0 0 0 1px rgb(255 255 255 / 0.07), 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-inset: inset 0 1px 0 rgb(255 255 255 / 0.03);
 }
 
 :root.light {
   color-scheme: light;
 
-  --c-app: #eceef1;
-  --c-panel: #f6f7f9;
+  --c-app: #ebecf0;
+  --c-panel: #ffffff;
   --c-surface: #ffffff;
   --c-elevated: #ffffff;
-  --c-overlay: rgb(15 18 24 / 0.32);
-  --c-hover: rgb(15 18 24 / 0.045);
-  --c-active: rgb(15 18 24 / 0.075);
-  --c-input: rgb(15 18 24 / 0.025);
+  --c-overlay: rgb(0 0 0 / 0.25);
+  --c-hover: rgb(0 0 0 / 0.04);
+  --c-active: rgb(0 0 0 / 0.075);
+  --c-input: rgb(0 0 0 / 0.02);
 
-  --c-line: rgb(15 18 24 / 0.085);
-  --c-line-strong: rgb(15 18 24 / 0.15);
-  --c-focus: rgb(84 101 255 / 0.5);
+  --c-line: rgb(0 0 0 / 0.08);
+  --c-line-strong: rgb(0 0 0 / 0.15);
+  --c-focus: rgb(53 116 240 / 0.7);
 
-  --c-fg: #171a21;
-  --c-muted: #555c69;
-  --c-subtle: #616875;
-  --c-faint: #9aa0aa;
+  --c-fg: #1e1f22;
+  --c-muted: #494b57;
+  --c-subtle: #5f6370;
+  --c-faint: #a8adbd;
+  --c-code: #080808;
 
-  --c-accent: #5465ff;
-  --c-accent-hover: #4354f0;
+  --c-accent: #3574f0;
+  --c-accent-hover: #2e67d8;
   --c-accent-fg: #ffffff;
-  --c-accent-soft: rgb(84 101 255 / 0.1);
-  --c-selection: rgb(84 101 255 / 0.16);
+  --c-accent-soft: rgb(53 116 240 / 0.1);
+  --c-selection: rgb(53 116 240 / 0.2);
 
-  --c-success: #16a368;
-  --c-success-soft: rgb(22 163 104 / 0.1);
-  --c-warning: #b7791f;
-  --c-warning-soft: rgb(183 121 31 / 0.11);
-  --c-danger: #d93a3f;
-  --c-danger-soft: rgb(217 58 63 / 0.09);
-  --c-info: #1d7fd6;
-  --c-info-soft: rgb(29 127 214 / 0.1);
+  --c-tab-active: #dbe6fd;
+  --c-tab-active-line: rgb(53 116 240 / 0.45);
 
-  --c-tag-red: #e5484d;
-  --c-tag-orange: #ef7d2a;
-  --c-tag-yellow: #d6a700;
-  --c-tag-green: #16a368;
-  --c-tag-blue: #1d7fd6;
-  --c-tag-purple: #8e4ee8;
-  --c-tag-gray: #7c838f;
+  --c-success: #1d7f37;
+  --c-success-soft: rgb(32 138 60 / 0.1);
+  --c-warning: #a46704;
+  --c-warning-soft: rgb(194 125 4 / 0.12);
+  --c-danger: #d12f41;
+  --c-danger-soft: rgb(219 59 75 / 0.09);
+  --c-info: #3574f0;
+  --c-info-soft: rgb(53 116 240 / 0.1);
 
-  --c-grid-header: #f6f7f9;
-  --c-grid-row-alt: rgb(15 18 24 / 0.018);
-  --c-grid-null: #a1a7b1;
-  --c-grid-modified: rgb(214 167 0 / 0.16);
-  --c-grid-inserted: rgb(22 163 104 / 0.11);
-  --c-grid-deleted: rgb(217 58 63 / 0.1);
+  --c-tag-red: #db3b4b;
+  --c-tag-orange: #e56d17;
+  --c-tag-yellow: #c99a00;
+  --c-tag-green: #208a3c;
+  --c-tag-blue: #3574f0;
+  --c-tag-purple: #8f5ed6;
+  --c-tag-gray: #818594;
 
-  --c-syn-keyword: #6b4fe0;
-  --c-syn-string: #0f8a5f;
-  --c-syn-number: #c4571d;
-  --c-syn-comment: #9aa0ab;
-  --c-syn-function: #1d6fc2;
-  --c-syn-operator: #4b5260;
-  --c-syn-type: #a66a00;
+  --c-grid-header: #f7f8fa;
+  --c-grid-row-alt: rgb(0 0 0 / 0);
+  --c-grid-null: #a8adbd;
+  --c-grid-modified: rgb(201 154 0 / 0.16);
+  --c-grid-inserted: rgb(32 138 60 / 0.11);
+  --c-grid-deleted: rgb(219 59 75 / 0.1);
+
+  --c-syn-keyword: #0033b3;
+  --c-syn-string: #067d17;
+  --c-syn-number: #1750eb;
+  --c-syn-comment: #8c8c8c;
+  --c-syn-function: #00627a;
+  --c-syn-operator: #080808;
+  --c-syn-type: #0033b3;
 
   --c-dialect-postgres: #3d7fd1;
   --c-dialect-postgres-deep: #24589f;
@@ -168,9 +181,9 @@
   --c-brand-deep: #4338ca;
   --c-on-solid: #ffffff;
 
-  --c-kbd: rgb(15 18 24 / 0.04);
-  --c-kbd-line: rgb(15 18 24 / 0.11);
-  --c-glow: rgb(84 101 255 / 0.1);
+  --c-kbd: rgb(0 0 0 / 0.04);
+  --c-kbd-line: rgb(0 0 0 / 0.11);
+  --c-glow: rgb(53 116 240 / 0.1);
   --c-skeleton: rgb(15 18 24 / 0.055);
   --c-skeleton-shine: rgb(15 18 24 / 0.025);
 
@@ -201,12 +214,15 @@
   --color-muted: var(--c-muted);
   --color-subtle: var(--c-subtle);
   --color-faint: var(--c-faint);
+  --color-code: var(--c-code);
 
   --color-accent: var(--c-accent);
   --color-accent-hover: var(--c-accent-hover);
   --color-accent-fg: var(--c-accent-fg);
   --color-accent-soft: var(--c-accent-soft);
   --color-selection: var(--c-selection);
+  --color-tab-active: var(--c-tab-active);
+  --color-tab-active-line: var(--c-tab-active-line);
 
   --color-success: var(--c-success);
   --color-success-soft: var(--c-success-soft);

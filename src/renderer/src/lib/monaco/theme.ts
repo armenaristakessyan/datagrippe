@@ -10,8 +10,8 @@ export const MONACO_THEME: Record<ResolvedTheme, string> = {
 }
 
 const FALLBACK: Record<ResolvedTheme, Record<string, string>> = {
-  dark: { surface: '#17191e', elevated: '#1d2026', fg: '#e7e9ee', muted: '#a0a6b2', subtle: '#6c7280', faint: '#4a4f5a', accent: '#7c8cff' },
-  light: { surface: '#ffffff', elevated: '#ffffff', fg: '#171a21', muted: '#555c69', subtle: '#808794', faint: '#b3b8c1', accent: '#5465ff' },
+  dark: { surface: '#181a1c', elevated: '#2b2d30', fg: '#dfe1e5', code: '#bcbec4', muted: '#b4b8bf', subtle: '#9497a0', faint: '#5f6268', accent: '#3574f0' },
+  light: { surface: '#ffffff', elevated: '#ffffff', fg: '#1e1f22', code: '#080808', muted: '#494b57', subtle: '#5f6370', faint: '#a8adbd', accent: '#3574f0' },
 }
 
 /** Read a `--c-<name>` token from the document as #rrggbb[aa]. */
@@ -32,6 +32,7 @@ export function buildTheme(theme: ResolvedTheme, styles: CSSStyleDeclaration): M
   const surface = t('surface')
   const elevated = t('elevated')
   const fg = t('fg')
+  const code = t('code')
   const muted = t('muted')
   const subtle = t('subtle')
   const faint = t('faint')
@@ -64,16 +65,16 @@ export function buildTheme(theme: ResolvedTheme, styles: CSSStyleDeclaration): M
     // Both SQL grammars append ".sql" to token names, and the base themes style "string.sql",
     // "predefined.sql"…: every rule is declared with and without the postfix so ours win.
     rules: rules([
-      ['', fg],
+      ['', code],
       ['keyword', syn.keyword],
       ['operator', syn.operator],
       ['string', syn.string],
       ['number', syn.number],
       ['comment', syn.comment, 'italic'],
-      ['predefined', syn.fn],
+      ['predefined', syn.fn, 'italic'],
       ['type', syn.type],
-      ['identifier', fg],
-      ['identifier.quote', fg],
+      ['identifier', code],
+      ['identifier.quote', code],
       ['delimiter', muted],
       ['delimiter.parenthesis', muted],
       ['delimiter.square', muted],
@@ -84,7 +85,7 @@ export function buildTheme(theme: ResolvedTheme, styles: CSSStyleDeclaration): M
       'widget.shadow': theme === 'dark' ? '#00000080' : '#0f121826',
       'widget.border': lineStrong,
       'editor.background': surface,
-      'editor.foreground': fg,
+      'editor.foreground': code,
       'editorGutter.background': surface,
       'editorLineNumber.foreground': faint,
       'editorLineNumber.activeForeground': muted,
@@ -98,7 +99,7 @@ export function buildTheme(theme: ResolvedTheme, styles: CSSStyleDeclaration): M
       'editor.findMatchBackground': withAlpha(warning, 0.35),
       'editor.findMatchHighlightBackground': withAlpha(warning, 0.18),
       'editor.findRangeHighlightBackground': withAlpha(accentSoft, 0.5),
-      'editorCursor.foreground': accent,
+      'editorCursor.foreground': fg,
       'editorWhitespace.foreground': withAlpha(faint, 0.6),
       'editorIndentGuide.background1': line,
       'editorIndentGuide.activeBackground1': lineStrong,

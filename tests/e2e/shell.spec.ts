@@ -57,7 +57,7 @@ test.describe('app shell', () => {
     await expect(dialog).toBeHidden()
     await expect(dg.treeItem('Prod PG')).toHaveAttribute('aria-expanded', 'true')
     await dg.menu('New console')
-    await expect(page.getByRole('navigation', { name: 'Location' })).toContainText('Prod PG')
+    await expect(page.getByRole('contentinfo')).toContainText('Prod PG')
 
     // The production guard's confirmation gives the focus back to the editor, answered either way.
     await dg.typeSql('CREATE TEMP TABLE shell_guard (id int); DROP TABLE shell_guard')
@@ -147,22 +147,27 @@ test.describe('app shell', () => {
     await expect(page.getByText('Query cancelled').first()).toBeVisible()
   })
 
-  test('the title bar shows where the console works, and its buttons take clicks instead of dragging the window', async ({ dg }) => {
+  test('the title bar and the query history take clicks instead of dragging the window', async ({ dg }) => {
     const { page } = dg
     await dg.createConnection('postgres')
     await dg.menu('New console')
-    const location = page.getByRole('navigation', { name: 'Location' })
-    await expect(location).toContainText(ENGINES.postgres.name)
-    await expect(location).toContainText(ENGINES.postgres.database)
+    await dg.menu('Query history')
+    await expect(page.getByRole('dialog', { name: 'Query history' })).toBeVisible()
 
     // Clicks synthesized by Playwright skip the window-drag area, so replay how Chromium hands it to the OS: the
     // boxes of the elements whose (inherited) app-region is set, in tree order, drag adding and no-drag removing.
     const draggable = await page.evaluate(() => {
       // Runs in the renderer, where globalThis is the window (this project has no DOM typings).
       type Rect = { left: number; right: number; top: number; bottom: number; width: number; height: number }
-      type El = { children: ArrayLike<El>; tagName: string; getBoundingClientRect(): Rect; getAttribute(name: string): string | null }
+      type El = {
+        children: ArrayLike<El>
+        tagName: string
+        getBoundingClientRect(): Rect
+        getAttribute(name: string): string | null
+        closest(selector: string): El | null
+      }
       type Style = { getPropertyValue(name: string): string; display: string; visibility: string }
-      type Win = { document: { querySelector(selector: string): El | null }; getComputedStyle(el: El): Style }
+      type Win = { document: { body: El; querySelector(selector: string): El | null }; getComputedStyle(el: El): Style }
       const win = globalThis as unknown as Win
       const header = win.document.querySelector('header')
       const mode = (style: Style) => style.getPropertyValue('app-region') || style.getPropertyValue('-webkit-app-region')
@@ -175,10 +180,10 @@ test.describe('app shell', () => {
         const box = style.display !== 'inline' || el.tagName.toLowerCase() === 'svg'
         const m = mode(style)
         if ((m === 'drag' || m === 'no-drag') && box && style.visibility === 'visible' && rect.width > 0 && rect.height > 0) regions.push({ drag: m === 'drag', rect })
-        if (el.tagName === 'BUTTON' && rect.width > 0) buttons.push(el)
+        if (el.tagName === 'BUTTON' && rect.width > 0 && el.closest('header, [role="dialog"]')) buttons.push(el)
         for (const child of Array.from(el.children)) walk(child)
       }
-      walk(header)
+      walk(win.document.body)
       const dragsAt = (x: number, y: number) =>
         regions.reduce((drag, { drag: d, rect: r }) => (x >= r.left && x < r.right && y >= r.top && y < r.bottom ? d : drag), false)
       return buttons
@@ -186,7 +191,7 @@ test.describe('app shell', () => {
           const r = button.getBoundingClientRect()
           return dragsAt(r.left + r.width / 2, r.top + r.height / 2)
         })
-        .map((button) => button.getAttribute('aria-label') ?? 'Search')
+        .map((button) => button.getAttribute('aria-label') ?? 'unnamed button')
     })
     expect(draggable).toEqual([])
   })

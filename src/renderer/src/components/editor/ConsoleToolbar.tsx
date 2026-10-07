@@ -1,12 +1,11 @@
-// Console toolbar: run split-button (Cancel in place while running / connecting), connection / database /
-// schema pickers, transaction mode, and view actions.
+// Console toolbar: run split-button (Cancel in place while running / connecting), transaction mode, database /
+// schema pickers (plus the connection picker for a console whose connection is gone), and view actions.
 import { useMemo } from 'react'
 import {
   ChevronDown,
   CircleStop,
   Database,
   Gauge,
-  History,
   Layers,
   ListTree,
   Lock,
@@ -15,7 +14,6 @@ import {
   Play,
   RefreshCw,
   ScrollText,
-  ShieldAlert,
   Undo2,
   WandSparkles,
   Check,
@@ -44,7 +42,6 @@ import {
 import { cn } from '@/lib/cn'
 import { getEditor } from '@/lib/editor-registry'
 import { formatBytes } from '@/lib/format'
-import { formatShortcut } from '@/lib/shortcuts'
 import { useCatalog } from '@/stores/catalog'
 import { useConnections } from '@/stores/connections'
 import { displayedAutoCommit, useConsoles, wantsManualCommit, type ConsoleRuntime } from '@/stores/consoles'
@@ -74,19 +71,11 @@ export function ConsoleToolbar({ tab, connection, runtime, dialect, database, re
 
   return (
     // A size container: the badges collapse to icons when the toolbar is narrow.
-    <Toolbar aria-label="Console toolbar" className="@container gap-1 overflow-hidden">
+    // Laid out like a JetBrains console toolbar: run and transaction controls on the left, the target (database,
+    // schema) on the right.
+    <Toolbar aria-label="Console toolbar" bordered={false} className="@container gap-1 overflow-hidden">
       <ToolbarGroup className="shrink-0 gap-1.5">
         <RunButton tabId={tab.id} runtime={runtime} />
-      </ToolbarGroup>
-
-      <ToolbarSeparator />
-
-      {/* While a statement runs (or the session connects) the target cannot change: switching would
-          silently cancel it, or run it somewhere else than the toolbar says. */}
-      <ToolbarGroup className="min-w-0 gap-0.5">
-        <ConnectionPicker tab={tab} connection={connection} runtime={runtime} disabled={busy} />
-        {connection && <DatabasePicker tab={tab} connection={connection} runtime={runtime} database={database} dialect={dialect} disabled={busy} />}
-        {connection && database && <SchemaPicker tab={tab} runtime={runtime} database={database} dialect={dialect} disabled={busy} />}
       </ToolbarGroup>
 
       {connection && (
@@ -98,14 +87,17 @@ export function ConsoleToolbar({ tab, connection, runtime, dialect, database, re
 
       <ToolbarSpacer />
 
+      {/* While a statement runs (or the session connects) the target cannot change: switching would
+          silently cancel it, or run it somewhere else than the toolbar says. */}
+      <ToolbarGroup className="min-w-0 gap-0.5">
+        {!connection && <ConnectionPicker tab={tab} connection={connection} runtime={runtime} disabled={busy} />}
+        {connection && <DatabasePicker tab={tab} connection={connection} runtime={runtime} database={database} dialect={dialect} disabled={busy} />}
+        {connection && database && <SchemaPicker tab={tab} runtime={runtime} database={database} dialect={dialect} disabled={busy} />}
+      </ToolbarGroup>
+
+      <ToolbarSeparator />
+
       <ToolbarGroup className="shrink-0 gap-1">
-        {connection?.productionGuard && (
-          <Tooltip content="Production: destructive statements ask for confirmation">
-            <Badge tone="danger" icon={ShieldAlert} aria-label="Production">
-              <span className="@max-[880px]:hidden">Production</span>
-            </Badge>
-          </Tooltip>
-        )}
         {connection?.readOnly && (
           <Tooltip content="Read-only: statements that modify data or schema are blocked">
             <Badge tone="warning" icon={Lock} aria-label="Read-only">
@@ -113,7 +105,7 @@ export function ConsoleToolbar({ tab, connection, runtime, dialect, database, re
             </Badge>
           </Tooltip>
         )}
-        {(connection?.productionGuard || connection?.readOnly) && <span className="w-1" />}
+        {connection?.readOnly && <span className="w-1" />}
         <IconButton
           icon={WandSparkles}
           label="Format SQL"
@@ -124,7 +116,6 @@ export function ConsoleToolbar({ tab, connection, runtime, dialect, database, re
             focusEditor(tab.id)
           }}
         />
-        <IconButton icon={History} label="Query history" shortcut={CONSOLE_SHORTCUTS.history} size="xs" onClick={() => useUi.getState().setHistoryOpen(true)} />
         <IconButton
           icon={resultsCollapsed ? PanelBottomOpen : PanelBottomClose}
           label={resultsCollapsed ? 'Show results' : 'Hide results'}
@@ -143,50 +134,47 @@ function RunButton({ tabId, runtime }: { tabId: string; runtime: ConsoleRuntime 
   const connecting = runtime.status === 'connecting'
   return (
     <div className="flex items-center">
-      {/* Run turns into Cancel in place (same width): nothing in the toolbar moves while a query runs.
-          The elapsed time is in the results header and the status bar. */}
+      {/* Run (a green triangle, as in JetBrains IDEs) turns into Cancel in place: nothing in the toolbar moves
+          while a query runs. The elapsed time is in the results header and the status bar. */}
       {running || connecting ? (
         <Tooltip content={running ? 'Cancel query' : 'Stop connecting'} shortcut={running ? CONSOLE_SHORTCUTS.cancel : undefined}>
           <Button
-            variant="secondary"
-            size="xs"
-            leadingIcon={CircleStop}
-            className="w-[88px] justify-start rounded-r-none pl-1.5 pr-2 text-danger hover:text-danger"
+            variant="ghost"
+            size="sm"
+            icon={CircleStop}
+            aria-label="Cancel"
+            className="rounded-r-none text-danger hover:text-danger"
             onClick={() => {
               void useConsoles.getState().cancel(tabId)
               focusEditor(tabId)
             }}
-          >
-            Cancel
-          </Button>
+          />
         </Tooltip>
       ) : (
         <Tooltip content="Run statement at caret, or the selection" shortcut={CONSOLE_SHORTCUTS.runStatement}>
           <Button
-            variant="primary"
-            size="xs"
-            leadingIcon={Play}
+            variant="ghost"
+            size="sm"
+            icon={<Play size={16} strokeWidth={2} />}
+            aria-label="Run"
             loading={runtime.explaining}
             disabled={runtime.explaining}
-            className="w-[88px] justify-start rounded-r-none pl-1.5 pr-2"
+            className="rounded-r-none text-success hover:text-success"
             onClick={() => {
               runConsole(tabId, 'statement')
               focusEditor(tabId)
             }}
-          >
-            Run
-            <span className="ml-1.5 text-2xs font-normal opacity-65">{formatShortcut(CONSOLE_SHORTCUTS.runStatement)}</span>
-          </Button>
+          />
         </Tooltip>
       )}
       <DropdownMenu>
         <DropdownMenuTrigger asChild disabled={running || connecting || runtime.explaining}>
           <Button
-            variant={running || connecting ? 'secondary' : 'primary'}
-            size="xs"
+            variant="ghost"
+            size="sm"
             icon={<ChevronDown size={12} strokeWidth={2.25} />}
             aria-label="More run options"
-            className="w-[18px] rounded-l-none shadow-[inset_1px_0_0_rgb(0_0_0/0.18)]"
+            className="w-4 rounded-l-none text-subtle"
           />
         </DropdownMenuTrigger>
         <DropdownMenuContent

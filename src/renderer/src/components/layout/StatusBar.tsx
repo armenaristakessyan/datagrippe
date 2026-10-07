@@ -55,7 +55,7 @@ export function StatusBar() {
   const schema = !tab || tab.kind === 'sessions' ? undefined : tab.kind === 'console' ? tab.schema : tab.table.schema
 
   return (
-    <footer className="flex h-6 shrink-0 items-center gap-3 border-t border-line bg-panel px-2.5 text-2xs text-subtle">
+    <footer className="flex h-7 shrink-0 items-center gap-3 bg-app px-3 text-xs text-subtle">
       {connection ? (
         <>
           <Tooltip content={runtime?.error ? (runtime.errorKind === 'vault' ? `Vault: ${vaultMessage(runtime.error)}` : runtime.error) : statusLabel(status)} side="top">

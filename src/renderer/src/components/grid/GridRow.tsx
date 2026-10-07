@@ -123,7 +123,7 @@ function GridRowImpl({
       role="row"
       aria-rowindex={viewRow + 2}
       className={cn(
-        'absolute left-0 flex font-mono text-xs leading-none text-fg [--row-tint:transparent]',
+        'absolute left-0 flex font-mono text-xs leading-none text-code [--row-tint:transparent]',
         viewRow % 2 === 1 && 'bg-grid-row-alt [--row-tint:var(--c-grid-row-alt)]',
         rowState ? STATE_BG[rowState] : 'hover:bg-hover hover:[--row-tint:var(--c-hover)]',
       )}
@@ -134,7 +134,7 @@ function GridRowImpl({
           role="rowheader"
           data-gutter=""
           className={cn(
-            'sticky left-0 z-10 flex h-full shrink-0 items-center justify-end border-b border-r border-line bg-grid-header pr-2 text-2xs tabular',
+            'sticky left-0 z-10 flex h-full shrink-0 items-center justify-end border-b border-r border-line bg-surface pr-2 text-2xs tabular',
             rowSelected ? 'text-fg before:absolute before:inset-0 before:bg-selection' : 'text-faint',
             rowState && cn('after:absolute after:inset-y-0 after:left-0 after:w-0.5', STATE_BAR[rowState]),
           )}

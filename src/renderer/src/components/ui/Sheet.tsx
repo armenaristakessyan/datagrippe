@@ -23,7 +23,11 @@ export interface SheetProps {
   children?: ReactNode
 }
 
-/** Side drawer (history, details). Full height below the title bar. */
+/**
+ * Side drawer (history, details), laid out like a JetBrains tool window: between the title bar and the status bar,
+ * next to the tool stripe of its side. Kept out of the title bar, whose window-drag area would swallow clicks on
+ * the close button.
+ */
 export function Sheet({
   open,
   onOpenChange,
@@ -47,10 +51,11 @@ export function Sheet({
           onCloseAutoFocus={returnFocus}
           style={{ width }}
           className={cn(
-            'fixed bottom-2 top-2 z-50 flex max-w-[calc(100vw-16px)] flex-col overflow-hidden rounded-xl border border-line bg-elevated text-fg shadow-dialog outline-none',
+            // top: the title bar (h-10); bottom: the status bar (h-7); sides: the tool stripes (w-10).
+            'no-drag fixed bottom-7 top-10 z-50 flex max-w-[calc(100vw-96px)] flex-col overflow-hidden rounded-lg border border-line bg-elevated text-fg shadow-dialog outline-none',
             side === 'right'
-              ? 'right-2 data-[state=open]:animate-sheet-in data-[state=closed]:animate-sheet-out'
-              : 'left-2 data-[state=open]:animate-sheet-in-left data-[state=closed]:animate-sheet-out-left',
+              ? 'right-10 data-[state=open]:animate-sheet-in data-[state=closed]:animate-sheet-out'
+              : 'left-10 data-[state=open]:animate-sheet-in-left data-[state=closed]:animate-sheet-out-left',
             className,
           )}
         >

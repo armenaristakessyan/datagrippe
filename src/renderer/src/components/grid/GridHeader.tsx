@@ -81,7 +81,7 @@ function GridHeaderImpl({
         style={isFrozen ? { width: layout.widths[c], left: layout.gutter + (layout.offsets[c] ?? 0) } : { width: layout.widths[c] }}
       >
         <div className="relative flex min-w-0 flex-1 flex-col justify-center gap-px">
-          <span className={cn('flex min-w-0 items-center gap-1 text-xs font-medium leading-4', selected ? 'text-fg' : 'text-fg/90')}>
+          <span className={cn('flex min-w-0 items-center gap-1 font-mono text-xs leading-4', selected ? 'text-fg' : 'text-fg/90')}>
             {primaryKeyColumns?.has(c) && <KeyRound size={11} strokeWidth={2} className="shrink-0 text-warning" aria-label="Primary key" />}
             {reference && !primaryKeyColumns?.has(c) && <Link2 size={11} strokeWidth={2} className="shrink-0 text-info" aria-label="Foreign key" />}
             <span className="truncate">{column.name || <span className="italic text-subtle">?column?</span>}</span>
