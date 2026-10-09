@@ -161,12 +161,20 @@ export function Combobox<T extends string>({
                       )}
                     >
                       {o.icon && <span className="flex shrink-0 text-muted">{renderIcon(o.icon, 14)}</span>}
-                      <span className="min-w-0 flex-1 truncate">{o.render ?? o.label}</span>
-                      {o.hint && <span className="shrink-0 text-xs text-subtle tabular">{o.hint}</span>}
+                      {/* The label keeps its width; the hint gets what is left and truncates first. */}
+                      <span className="min-w-0 flex-initial truncate">{o.render ?? o.label}</span>
+                      {o.hint && (
+                        <span
+                          className="min-w-0 flex-1 truncate text-right text-xs text-subtle tabular"
+                          title={typeof o.hint === 'string' ? o.hint : undefined}
+                        >
+                          {o.hint}
+                        </span>
+                      )}
                       <Check
                         size={13}
                         strokeWidth={2.25}
-                        className={cn('shrink-0 text-accent', o.value === value ? 'opacity-100' : 'opacity-0')}
+                        className={cn('ml-auto shrink-0 text-accent', o.value === value ? 'opacity-100' : 'opacity-0')}
                       />
                     </Command.Item>
                   ))}

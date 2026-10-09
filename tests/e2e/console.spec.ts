@@ -1,5 +1,6 @@
 import { copyFileSync, mkdirSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { queryMssql } from './db'
 import { expect, test, type Dg } from './fixtures'
 
 /** Pick a suggestion from Monaco's suggest widget by its label. */
@@ -72,6 +73,32 @@ test.describe('SQL console', () => {
     await results.getByRole('tab', { name: /Messages/ }).click()
     await expect(page.getByTestId('results').getByText('hello from batch 2', { exact: true })).toBeVisible()
     await dg.shot('messages')
+  })
+
+  test('the schema picker keeps names readable next to a long owner (SQL Server)', async ({ dg }) => {
+    const { page } = dg
+    // The owner is the option's hint: a long one used to squeeze the schema name to one letter.
+    await queryMssql("CREATE USER [example-long-service-account-owner] WITHOUT LOGIN; EXEC ('CREATE SCHEMA billing AUTHORIZATION [example-long-service-account-owner]')")
+    try {
+      await dg.createConnection('mssql')
+      await dg.menu('New console')
+      await page.getByRole('button', { name: 'Completion schema' }).click()
+      const option = page.getByRole('option', { name: /^billing/ })
+      await expect(option).toBeVisible()
+      await dg.shot('schema-picker-long-owner')
+      const [label, hint] = [option.locator(':scope > span').first(), option.locator(':scope > span').nth(1)]
+      // Runs in the renderer (this project has no DOM typings).
+      const fits = (node: unknown): boolean => {
+        const el = node as { scrollWidth: number; clientWidth: number }
+        return el.scrollWidth <= el.clientWidth
+      }
+      expect(await label.evaluate(fits)).toBe(true)
+      expect(await hint.evaluate(fits)).toBe(false)
+      await expect(hint).toHaveAttribute('title', 'example-long-service-account-owner')
+      await page.keyboard.press('Escape')
+    } finally {
+      await queryMssql('DROP SCHEMA billing; DROP USER [example-long-service-account-owner]')
+    }
   })
 
   test('manual transactions commit on demand', async ({ dg }) => {
