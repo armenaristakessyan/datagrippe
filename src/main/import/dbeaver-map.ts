@@ -191,7 +191,7 @@ function firstOf(props: Record<string, string>, keys: string[]): string | undefi
   return undefined
 }
 
-interface SslResult {
+export interface SslResult {
   ssl: SslConfig
   notes: string[]
 }
@@ -219,7 +219,7 @@ function pgSslMode(raw: string, notes: string[]): SslMode | undefined {
   }
 }
 
-function postgresSsl(sslHandler: Json | null, driverProps: Record<string, string>, url: ParsedJdbcUrl | null): SslResult {
+export function postgresSsl(sslHandler: Json | null, driverProps: Record<string, string>, url: ParsedJdbcUrl | null): SslResult {
   const notes: string[] = []
   const handlerProps = sslHandler ? lowerKeys(sslHandler.properties) : {}
   const merged: Record<string, string> = { ...(url?.params ?? {}), ...driverProps, ...handlerProps }
@@ -246,7 +246,7 @@ function postgresSsl(sslHandler: Json | null, driverProps: Record<string, string
   return { ssl, notes }
 }
 
-function sqlServerSsl(
+export function sqlServerSsl(
   sslHandler: Json | null,
   driverProps: Record<string, string>,
   providerProps: Record<string, string>,

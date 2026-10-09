@@ -38,6 +38,8 @@ export const api = {
     info: () => call('app:info'),
     openExternal: (url: string) => call('app:openExternal', url),
     showItemInFolder: (path: string) => call('app:showItemInFolder', path),
+    icons: () => call('app:icons'),
+    openIconsFolder: () => call('app:openIconsFolder'),
   },
   settings: {
     get: () => call('settings:get'),
@@ -64,6 +66,7 @@ export const api = {
   },
   importers: {
     dbeaverScan: (...a: IpcArgs<'import:dbeaverScan'>) => call('import:dbeaverScan', ...a),
+    datagripParse: (...a: IpcArgs<'import:datagripParse'>) => call('import:datagripParse', ...a),
   },
   meta: {
     databases: (...a: IpcArgs<'meta:databases'>) => call('meta:databases', ...a),

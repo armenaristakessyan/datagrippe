@@ -29,8 +29,9 @@ export interface SettingRowProps {
   description?: ReactNode
   /** id of the control, links the label. */
   htmlFor?: string
-  children: ReactNode
-  /** Content under the row (previews, presets). */
+  /** Control on the right of the label; none when the row's control is `below`. */
+  children?: ReactNode
+  /** Content under the row (previews, presets, a wide picker). */
   below?: ReactNode
 }
 
@@ -44,7 +45,7 @@ export function SettingRow({ label, description, htmlFor, children, below }: Set
           </label>
           {description && <p className="mt-0.5 text-xs leading-4 text-subtle">{description}</p>}
         </div>
-        <div className="flex shrink-0 items-center gap-2">{children}</div>
+        {children && <div className="flex shrink-0 items-center gap-2">{children}</div>}
       </div>
       {below && <div className="mt-2.5">{below}</div>}
     </div>

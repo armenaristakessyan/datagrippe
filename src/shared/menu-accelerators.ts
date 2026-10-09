@@ -3,7 +3,7 @@
 import type { MenuCommand } from './ipc'
 
 /** Menu commands without a keyboard shortcut. */
-export type UnacceleratedMenuCommand = 'import-dbeaver'
+export type UnacceleratedMenuCommand = 'import-dbeaver' | 'import-datagrip'
 
 export const MENU_ACCELERATORS: Record<Exclude<MenuCommand, UnacceleratedMenuCommand>, string> = {
   'new-console': 'CmdOrCtrl+T',

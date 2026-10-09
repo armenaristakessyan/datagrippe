@@ -52,6 +52,8 @@ describe('normalizeSettingsPatch', () => {
       gridRowNumbers: false,
       nullDisplay: '',
     })
+    expect(normalizeSettingsPatch({ appIcon: 'datagrip-halo' })).toEqual({ appIcon: 'datagrip-halo' })
+    expect(normalizeSettingsPatch({ appIcon: 'Not An Id' })).toEqual({})
   })
 })
 

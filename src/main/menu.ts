@@ -60,6 +60,7 @@ export function buildMenuTemplate({ platform, appName, send, openUserData, devel
       item('new-console', 'New console'),
       item('new-connection', 'New connection…'),
       item('import-dbeaver', 'Import from DBeaver…'),
+      item('import-datagrip', 'Import from DataGrip…'),
       sep,
       item('open-file', 'Open file…'),
       item('save-file', 'Save'),

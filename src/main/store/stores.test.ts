@@ -42,6 +42,12 @@ describe('stores', () => {
       expect(sanitizeSettings({ maxRows: 1e9, editorFontSize: 2 })).toMatchObject({ maxRows: 100_000, editorFontSize: 9 })
     })
 
+    it('keeps an app icon id only', () => {
+      expect(sanitizeSettings({ appIcon: 'datagrip-halo' }).appIcon).toBe('datagrip-halo')
+      expect(sanitizeSettings({ appIcon: 'Not An Id' }).appIcon).toBe(DEFAULT_SETTINGS.appIcon)
+      expect(sanitizeSettings({ appIcon: 42 }).appIcon).toBe(DEFAULT_SETTINGS.appIcon)
+    })
+
     it('persists updates and reloads partial files', () => {
       const store = new SettingsStore(dir, silent)
       expect(store.get()).toEqual(DEFAULT_SETTINGS)

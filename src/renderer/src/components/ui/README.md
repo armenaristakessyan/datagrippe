@@ -31,7 +31,7 @@ lives in `@/lib/shortcuts` (`formatShortcut`, `shortcutTokens`, `MENU_ACCELERATO
 | `Checkbox` | `checked` (`boolean \| 'indeterminate'`), `onCheckedChange`, `label`, `description`, `disabled` | `<Checkbox checked={save} onCheckedChange={setSave} label="Save password" />` |
 | `Switch` | `checked`, `onCheckedChange`, `size` sm · md, `label`, `description` (label left, switch right) | `<Switch checked={ro} onCheckedChange={setRo} label="Read-only" description="Block writes" />` |
 | `SegmentedControl` | `value`, `onValueChange`, `options` `{value,label?,icon?,ariaLabel?}`, `size` xs · sm, `fill` | `<SegmentedControl value={view} onValueChange={setView} options={[{value:'grid',label:'Grid'},{value:'text',label:'Text'}]} />` |
-| `RadioCards` | `value`, `onValueChange`, `options` `{value,title,description?,icon?}`, `columns` | `<RadioCards value={dialect} onValueChange={setDialect} options={[{value:'postgres',title:'PostgreSQL',icon:<DialectIcon dialect="postgres" size={20}/>}]} />` |
+| `RadioCards` | `value`, `onValueChange`, `options` `{value,title,description?,icon?}`, `columns`, `layout` (`row` / `tile`: icon above the title) | `<RadioCards value={dialect} onValueChange={setDialect} options={[{value:'postgres',title:'PostgreSQL',icon:<DialectIcon dialect="postgres" size={20}/>}]} />` |
 | `Field` | `label`, `htmlFor`, `hint`, `error` (replaces hint, red), `required` (red *), `labelAside`, `inline` (label left / control right) | `<Field label="Host" htmlFor="host" required error={err}><Input id="host" …/></Field>` |
 
 `controlClassName` is the shared field chrome (border, focus ring, invalid) for custom controls.

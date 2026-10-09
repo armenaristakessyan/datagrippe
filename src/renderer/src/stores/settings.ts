@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { DEFAULT_SETTINGS, type AppSettings, type ThemePreference } from '@shared/types'
+import { DEFAULT_SETTINGS, isAppIconId, type AppSettings, type ThemePreference } from '@shared/types'
 import { api } from '@/lib/api'
 
 /** Accepted ranges (mirrors the main-process sanitizer in src/main/store/settings.ts). */
@@ -23,6 +23,7 @@ function clampInt(value: unknown, limits: { min: number; max: number }): number 
 export function normalizeSettingsPatch(patch: Partial<AppSettings>): Partial<AppSettings> {
   const out: Partial<AppSettings> = {}
   if (patch.theme !== undefined && THEMES.includes(patch.theme)) out.theme = patch.theme
+  if (isAppIconId(patch.appIcon)) out.appIcon = patch.appIcon
   if (patch.formatKeywordCase !== undefined && KEYWORD_CASES.includes(patch.formatKeywordCase)) {
     out.formatKeywordCase = patch.formatKeywordCase
   }

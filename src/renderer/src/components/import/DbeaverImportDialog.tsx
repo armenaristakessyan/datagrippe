@@ -2,11 +2,13 @@
 // (default workspace or a chosen file), lists the connections grouped by DBeaver folder, collects the
 // Vault settings the imported Vault connections share, and saves the selection one by one.
 // DBeaver's credentials files are never read (main side): no password is imported.
+// "Import from DataGrip" (useUi().datagripImportOpen) is the same dialog reading the data sources DataGrip copies
+// to the clipboard, pasted as text; their groups play the part of the folders.
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronDown, ChevronRight, FileSearch, FolderOpen, Import, RefreshCw, Search, TriangleAlert } from 'lucide-react'
+import { ChevronDown, ChevronRight, ClipboardPaste, FileSearch, FolderOpen, Import, RefreshCw, Search, TriangleAlert } from 'lucide-react'
 import type { ConnectionConfig, ConnectionSecrets, DbErrorInfo, DbeaverImportCandidate, DbeaverScanResult, VaultDiscoverResult, VaultPathSuggestion } from '@shared/types'
 import { nodeIds } from '@/components/explorer/tree'
-import { Button, Callout, Dialog, EmptyState, Input, Skeleton, Spinner, toast, Tooltip } from '@/components/ui'
+import { Button, Callout, Dialog, EmptyState, Input, Skeleton, Spinner, Textarea, toast, Tooltip } from '@/components/ui'
 import { DEFAULT_DISCOVERY_ROLE } from '@/components/vault/config'
 import { vaultMessage } from '@/components/vault/format'
 import { SecretPathSuggest } from '@/components/vault/SecretPathSuggest'
@@ -56,9 +58,44 @@ const CHOOSE_LABEL = isMac() ? 'Choose file or folder…' : 'Choose file…'
 /** Show the filter box from this many candidates. */
 const FILTER_FROM = 8
 
+type ImportSource = 'dbeaver' | 'datagrip'
+
+const SOURCE_TEXT: Record<ImportSource, { title: string; description: string; list: string; filter: string; warningsFrom: string; none: string }> = {
+  dbeaver: {
+    title: 'Import from DBeaver',
+    description: 'Copies connection settings and folders. Passwords are never imported: Vault connections get fresh credentials each time they connect.',
+    list: 'DBeaver connections',
+    filter: 'Filter DBeaver connections',
+    warningsFrom: 'DBeaver’s files',
+    none: 'No DBeaver connection matches this filter.',
+  },
+  datagrip: {
+    title: 'Import from DataGrip',
+    description: 'Copies connection settings and groups. Passwords are never imported: enter them when a connection opens.',
+    list: 'DataGrip data sources',
+    filter: 'Filter DataGrip data sources',
+    warningsFrom: 'the pasted data sources',
+    none: 'No data source matches this filter.',
+  },
+}
+
+function setImportOpen(source: ImportSource, open: boolean): void {
+  if (source === 'dbeaver') useUi.getState().setDbeaverImportOpen(open)
+  else useUi.getState().setDatagripImportOpen(open)
+}
+
 export function DbeaverImportDialog() {
   useDbeaverImportCommand()
-  const open = useUi((s) => s.dbeaverImportOpen)
+  return <ImportDialog source="dbeaver" />
+}
+
+/** The same dialog, reading the data sources copied in DataGrip and pasted as text. */
+export function DatagripImportDialog() {
+  return <ImportDialog source="datagrip" />
+}
+
+function ImportDialog({ source }: { source: ImportSource }) {
+  const open = useUi((s) => (source === 'dbeaver' ? s.dbeaverImportOpen : s.datagripImportOpen))
   // A fresh session (new scan, new selection) every time the dialog opens; the old one animates out.
   const [session, setSession] = useState(0)
   const [wasOpen, setWasOpen] = useState(false)
@@ -67,16 +104,19 @@ export function DbeaverImportDialog() {
     if (open) setSession((s) => s + 1)
   }
   if (session === 0) return null
-  return <ImportSession key={session} open={open} />
+  return <ImportSession key={session} open={open} source={source} />
 }
 
 type ScanState =
+  | { status: 'paste' }
   | { status: 'loading'; path?: string }
   | { status: 'ready'; path?: string; result: DbeaverScanResult }
   | { status: 'error'; path?: string; error: DbErrorInfo }
 
-function ImportSession({ open }: { open: boolean }) {
-  const [scan, setScan] = useState<ScanState>({ status: 'loading' })
+function ImportSession({ open, source }: { open: boolean; source: ImportSource }) {
+  const text = SOURCE_TEXT[source]
+  const [scan, setScan] = useState<ScanState>(source === 'datagrip' ? { status: 'paste' } : { status: 'loading' })
+  const [pasted, setPasted] = useState('')
   const scanRun = useRef(0)
   const [selected, setSelectedKeys] = useState<Set<string>>(new Set())
   const [overrides, setOverrides] = useState<Map<string, string>>(new Map())
@@ -119,16 +159,12 @@ function ImportSession({ open }: { open: boolean }) {
 
   const close = () => {
     if (progress) return
-    useUi.getState().setDbeaverImportOpen(false)
+    setImportOpen(source, false)
   }
 
-  const runScan = async (path?: string) => {
-    const run = ++scanRun.current
-    setScan({ status: 'loading', path })
-    try {
-      const result = await api.importers.dbeaverScan(path)
-      if (run !== scanRun.current) return
-      setScan({ status: 'ready', path, result })
+  /** What a scan or a paste found: fill the Vault panel from it and select what can be imported. */
+  const applyResult = (result: DbeaverScanResult, path?: string) => {
+    setScan({ status: 'ready', path, result })
       setSettings((current) => {
         const filled = fillFromCandidates(current, result.candidates)
         // The prefilled template follows the engine most imported connections use (roles differ per engine).
@@ -142,14 +178,37 @@ function ImportSession({ open }: { open: boolean }) {
       setQuery('')
       setShowErrors(false)
       setShowRowErrors(false)
+  }
+
+  const runScan = async (path?: string) => {
+    const run = ++scanRun.current
+    setScan({ status: 'loading', path })
+    try {
+      const result = await api.importers.dbeaverScan(path)
+      if (run !== scanRun.current) return
+      applyResult(result, path)
     } catch (error) {
       if (run !== scanRun.current) return
       setScan({ status: 'error', path, error: errorInfo(error) })
     }
   }
 
+  const readPasted = async () => {
+    if (!pasted.trim()) return
+    const run = ++scanRun.current
+    setScan({ status: 'loading' })
+    try {
+      const result = await api.importers.datagripParse(pasted)
+      if (run !== scanRun.current) return
+      applyResult(result)
+    } catch (error) {
+      if (run !== scanRun.current) return
+      setScan({ status: 'error', error: errorInfo(error) })
+    }
+  }
+
   useEffect(() => {
-    void runScan()
+    if (source === 'dbeaver') void runScan()
     // Once per session; later scans come from "Choose file…" / "Try again".
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -239,7 +298,7 @@ function ImportSession({ open }: { open: boolean }) {
           const value = await useVault.getState().askSecret({
             field,
             target: {
-              name: 'Import from DBeaver',
+              name: text.title,
               dialect: first?.dialect ?? 'postgres',
               color: 'none',
               host: first?.host ?? '',
@@ -305,12 +364,12 @@ function ImportSession({ open }: { open: boolean }) {
         action: { label: 'Show in sidebar', onClick: () => revealInSidebar(saved) },
       })
     }
-    if (failed === 0) useUi.getState().setDbeaverImportOpen(false)
+    if (failed === 0) setImportOpen(source, false)
     else if (saved.length === 0) toast.error(`Could not import ${pluralize(failed, 'connection')}`, undefined, { description: 'See the errors in the list.' })
   }
 
   const ready = scan.status === 'ready' && candidates.length > 0
-  const emptyPath = scan.status === 'ready' ? (scan.path ?? scan.result.files[0]) : scan.path
+  const emptyPath = scan.status === 'ready' ? (scan.path ?? scan.result.files[0]) : scan.status === 'paste' ? undefined : scan.path
   const footerNote = (() => {
     if (running) return null
     if (!ready) return null
@@ -332,13 +391,13 @@ function ImportSession({ open }: { open: boolean }) {
       hideClose={running}
       icon={Import}
       tone="accent"
-      title="Import from DBeaver"
+      title={text.title}
       onOpenAutoFocus={(e) => {
         // The list is still loading: focus the dialog itself rather than ringing the close button.
         e.preventDefault()
         if (e.currentTarget instanceof HTMLElement) e.currentTarget.focus()
       }}
-      description="Copies connection settings and folders. Passwords are never imported: Vault connections get fresh credentials each time they connect."
+      description={text.description}
       bodyClassName="mt-3 flex min-h-0 flex-col overflow-hidden border-t border-line"
       footer={
         <>
@@ -355,35 +414,61 @@ function ImportSession({ open }: { open: boolean }) {
           <Button variant="ghost" onClick={close} disabled={running}>
             Cancel
           </Button>
-          <Button
-            variant="primary"
-            leadingIcon={Import}
-            loading={running}
-            disabled={!ready || !validation.ok || running}
-            onClick={() => void runImport()}
-          >
-            {chosen.length === 0 ? 'Import' : `Import ${pluralize(chosen.length, 'connection')}`}
-          </Button>
+          {scan.status === 'paste' ? (
+            <Button variant="primary" leadingIcon={ClipboardPaste} disabled={!pasted.trim()} onClick={() => void readPasted()}>
+              Read data sources
+            </Button>
+          ) : (
+            <Button
+              variant="primary"
+              leadingIcon={Import}
+              loading={running}
+              disabled={!ready || !validation.ok || running}
+              onClick={() => void runImport()}
+            >
+              {chosen.length === 0 ? 'Import' : `Import ${pluralize(chosen.length, 'connection')}`}
+            </Button>
+          )}
         </>
       }
     >
       {/* The list keeps room for a few rows under the Vault panel; a short window scrolls the whole body. */}
       <div className="flex h-[min(600px,calc(80vh-140px))] min-h-[260px] flex-col overflow-y-auto">
+        {scan.status === 'paste' ? (
+          <PastePanel value={pasted} onChange={setPasted} />
+        ) : (
+          <>
         <SourceBar
           scan={scan}
+          source={source}
+          count={candidates.length}
           picking={picking}
           disabled={running}
           onChoose={() => void chooseFile()}
+          onPasteAgain={() => setScan({ status: 'paste' })}
           query={query}
           onQuery={setQuery}
+          filterLabel={text.filter}
           showFilter={scan.status === 'ready' && candidates.length >= FILTER_FROM}
         />
         {/* With no connection at all the warnings are the explanation: the empty state shows them. */}
-        {scan.status === 'ready' && candidates.length > 0 && scan.result.warnings.length > 0 && <Warnings warnings={scan.result.warnings} />}
+        {scan.status === 'ready' && candidates.length > 0 && scan.result.warnings.length > 0 && <Warnings warnings={scan.result.warnings} from={text.warningsFrom} />}
 
         <div className={cn('flex-1 overflow-y-auto', ready && validation.vault ? 'min-h-[196px]' : 'min-h-0')}>
           {scan.status === 'loading' ? (
             <LoadingRows />
+          ) : scan.status === 'error' && source === 'datagrip' ? (
+            <EmptyState
+              tone="danger"
+              icon={TriangleAlert}
+              title="Could not read the pasted data sources"
+              description={scan.error.message}
+              action={
+                <Button size="sm" leadingIcon={ClipboardPaste} onClick={() => setScan({ status: 'paste' })}>
+                  Paste again
+                </Button>
+              }
+            />
           ) : scan.status === 'error' ? (
             <EmptyState
               tone="danger"
@@ -401,7 +486,18 @@ function ImportSession({ open }: { open: boolean }) {
                 </>
               }
             />
-          ) : candidates.length === 0 ? (
+          ) : candidates.length === 0 && source === 'datagrip' ? (
+            <EmptyState
+              icon={FileSearch}
+              title="No DataGrip data source found"
+              description={scan.status === 'ready' ? scan.result.warnings.join(' ') : undefined}
+              action={
+                <Button size="sm" variant="primary" leadingIcon={ClipboardPaste} onClick={() => setScan({ status: 'paste' })}>
+                  Paste again
+                </Button>
+              }
+            />
+          ) : scan.status === 'ready' && candidates.length === 0 ? (
             <EmptyState
               icon={FileSearch}
               title={
@@ -439,7 +535,7 @@ function ImportSession({ open }: { open: boolean }) {
               size="compact"
               icon={Search}
               title="No matches"
-              description="No DBeaver connection matches this filter."
+              description={text.none}
               action={
                 <Button size="xs" onClick={() => setQuery('')}>
                   Clear filter
@@ -448,6 +544,7 @@ function ImportSession({ open }: { open: boolean }) {
             />
           ) : (
             <CandidateList
+              label={text.list}
               groups={groups}
               selected={selected}
               outcomes={outcomes}
@@ -482,32 +579,71 @@ function ImportSession({ open }: { open: boolean }) {
             disabled={running}
           />
         )}
+          </>
+        )}
       </div>
     </Dialog>
   )
 }
 
-const SOURCE_LABEL: Record<ScanState['status'], string> = { loading: 'Reading', ready: 'Read from', error: 'Location' }
+const SOURCE_LABEL: Record<ScanState['status'], string> = { paste: 'Paste', loading: 'Reading', ready: 'Read from', error: 'Location' }
 
 function SourceBar({
   scan,
+  source,
+  count,
   picking,
   disabled,
   onChoose,
+  onPasteAgain,
   query,
   onQuery,
+  filterLabel,
   showFilter,
 }: {
   scan: ScanState
+  source: ImportSource
+  /** Data sources read (DataGrip). */
+  count: number
   picking: boolean
   disabled: boolean
   onChoose: () => void
+  onPasteAgain: () => void
   query: string
   onQuery: (q: string) => void
+  filterLabel: string
   showFilter: boolean
 }) {
   const files = scan.status === 'ready' ? scan.result.files : []
   const [first, ...more] = files
+  const filter = showFilter && (
+    <Input
+      size="sm"
+      leadingIcon={Search}
+      value={query}
+      placeholder="Filter"
+      aria-label={filterLabel}
+      wrapperClassName="w-44"
+      onChange={(e) => onQuery(e.target.value)}
+      onClear={() => onQuery('')}
+    />
+  )
+  if (source === 'datagrip') {
+    return (
+      <div className="flex h-10 shrink-0 items-center gap-2 border-b border-line px-5">
+        <span className="shrink-0 text-xs text-subtle">{scan.status === 'loading' ? 'Reading' : 'Pasted from'}</span>
+        <span className="flex min-w-0 flex-1 items-center gap-1.5 text-xs text-muted">
+          {scan.status === 'loading' && <Spinner size={12} />}
+          DataGrip
+          {scan.status === 'ready' && <span className="text-subtle tabular">· {pluralize(count, 'data source')}</span>}
+        </span>
+        {filter}
+        <Button size="xs" variant="secondary" leadingIcon={ClipboardPaste} disabled={disabled || scan.status === 'loading'} onClick={onPasteAgain}>
+          Paste again…
+        </Button>
+      </div>
+    )
+  }
   return (
     <div className="flex h-10 shrink-0 items-center gap-2 border-b border-line px-5">
       <span className="shrink-0 text-xs text-subtle">{SOURCE_LABEL[scan.status]}</span>
@@ -541,23 +677,12 @@ function SourceBar({
             )}
           </>
         ) : (
-          <span className="truncate font-mono text-2xs text-subtle" title={scan.path}>
-            {scan.path ? shortenPath(scan.path, 3) : 'DBeaver workspace'}
+          <span className="truncate font-mono text-2xs text-subtle" title={scan.status === 'paste' ? undefined : scan.path}>
+            {scan.status !== 'paste' && scan.path ? shortenPath(scan.path, 3) : 'DBeaver workspace'}
           </span>
         )}
       </span>
-      {showFilter && (
-        <Input
-          size="sm"
-          leadingIcon={Search}
-          value={query}
-          placeholder="Filter"
-          aria-label="Filter DBeaver connections"
-          wrapperClassName="w-44"
-          onChange={(e) => onQuery(e.target.value)}
-          onClear={() => onQuery('')}
-        />
-      )}
+      {filter}
       <Button size="xs" variant="secondary" leadingIcon={FolderOpen} loading={picking} disabled={disabled || scan.status === 'loading'} onClick={onChoose}>
         {CHOOSE_LABEL}
       </Button>
@@ -565,7 +690,7 @@ function SourceBar({
   )
 }
 
-function Warnings({ warnings }: { warnings: string[] }) {
+function Warnings({ warnings, from }: { warnings: string[]; from: string }) {
   const [expanded, setExpanded] = useState(false)
   const Chevron = expanded ? ChevronDown : ChevronRight
   return (
@@ -579,7 +704,7 @@ function Warnings({ warnings }: { warnings: string[] }) {
             onClick={() => setExpanded((e) => !e)}
             className="-mx-1 flex items-center gap-1 rounded px-1 outline-none hover:text-fg focus-visible:ring-2 focus-visible:ring-focus"
           >
-            {warnings.length === 1 ? '1 warning while reading DBeaver’s files' : `${warnings.length} warnings while reading DBeaver’s files`}
+            {warnings.length === 1 ? `1 warning while reading ${from}` : `${warnings.length} warnings while reading ${from}`}
             <Chevron size={13} strokeWidth={2} className="text-subtle" />
           </button>
         }
@@ -596,9 +721,31 @@ function Warnings({ warnings }: { warnings: string[] }) {
   )
 }
 
+/** Where the data sources copied in DataGrip are pasted. */
+function PastePanel({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-2 px-5 py-4">
+      <label htmlFor="dg-datagrip-paste" className="text-xs text-muted">
+        In DataGrip, select data sources or a folder in the Database Explorer and copy them ({isMac() ? '⌘C' : 'Ctrl+C'}), then paste
+        them here.
+      </label>
+      <Textarea
+        id="dg-datagrip-paste"
+        mono
+        autoFocus
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="#DataSourceSettings#…"
+        className="min-h-0 flex-1 resize-none"
+      />
+      <p className="text-2xs text-subtle">Passwords are never imported, not even one written in a connection URL.</p>
+    </div>
+  )
+}
+
 function LoadingRows() {
   return (
-    <div aria-busy="true" aria-label="Reading DBeaver connections">
+    <div aria-busy="true" aria-label="Reading connections">
       <div className="flex h-8 items-center gap-2.5 border-b border-line px-5">
         <Skeleton className="size-[15px] rounded-[4px]" />
         <Skeleton width={80} />

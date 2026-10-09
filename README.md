@@ -23,6 +23,8 @@ reachable from the command palette (⌘K), and the app works in a dark and a lig
   [Vault authentication](#vault-authentication).
 - Import from DBeaver (*File ▸ Import from DBeaver…*): folders, SSL/SSH settings, production flags and Vault
   connections. DBeaver's encrypted credentials file is never read. See [Import from DBeaver](#import-from-dbeaver).
+- Import from DataGrip (*File ▸ Import from DataGrip…*): paste the data sources copied in DataGrip's Database Explorer
+  (⌘C); host, port, database, user and group are kept. Passwords are never imported, not even one written in a URL.
 - Read-only connections (enforced server-side and by a statement classifier) and *Production* connections that ask before `DROP`, `TRUNCATE` or a `DELETE`/`UPDATE` without `WHERE`.
 - Paste a connection string to fill the dialog; per-connection session time zone for PostgreSQL.
 
@@ -197,6 +199,8 @@ npm run dist:release   # both DMGs: arm64 (Apple silicon) and x64 (Intel)
 
 Builds are signed ad hoc (`identity: "-"`, hardened runtime with electron-builder's default entitlements) and not
 notarized: see *Download* for the first launch. The app icon is `build/icon.png` (its source is `build/icon.svg`).
+*Settings ▸ Appearance ▸ App icon* can show your own icon in the Dock: put PNG files in the icons folder (*Open icons
+folder* there). `npm run dist:local` builds a DMG for this Mac with `build/local/icon.icns` (not versioned) as its icon.
 
 ## CI and releases
 

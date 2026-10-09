@@ -58,6 +58,8 @@ interface UiState {
   historyOpen: boolean
   /** "Import from DBeaver" dialog (components/import). */
   dbeaverImportOpen: boolean
+  /** "Import from DataGrip" dialog: the same dialog, reading pasted DataGrip data sources. */
+  datagripImportOpen: boolean
   connectionDialog: ConnectionDialogState
   dialogs: DialogRequest[]
 
@@ -69,6 +71,7 @@ interface UiState {
   setSettingsOpen: (open: boolean) => void
   setHistoryOpen: (open: boolean) => void
   setDbeaverImportOpen: (open: boolean) => void
+  setDatagripImportOpen: (open: boolean) => void
   openConnectionDialog: (opts?: { editId?: string; dialect?: Dialect; group?: string }) => void
   closeConnectionDialog: () => void
 
@@ -88,6 +91,7 @@ export const useUi = create<UiState>((set, get) => ({
   settingsOpen: false,
   historyOpen: false,
   dbeaverImportOpen: false,
+  datagripImportOpen: false,
   connectionDialog: { open: false },
   dialogs: [],
 
@@ -99,6 +103,7 @@ export const useUi = create<UiState>((set, get) => ({
   setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
   setHistoryOpen: (historyOpen) => set({ historyOpen }),
   setDbeaverImportOpen: (dbeaverImportOpen) => set({ dbeaverImportOpen }),
+  setDatagripImportOpen: (datagripImportOpen) => set({ datagripImportOpen }),
   openConnectionDialog: (opts) => set({ connectionDialog: { open: true, ...opts } }),
   closeConnectionDialog: () => set({ connectionDialog: { open: false } }),
 

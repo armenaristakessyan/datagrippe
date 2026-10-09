@@ -1,13 +1,14 @@
 // The panels of the settings dialog. Every control applies immediately through the saver.
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { FolderOpen, RefreshCw } from 'lucide-react'
-import type { AppInfo, AppSettings, ThemePreference } from '@shared/types'
+import { BUILTIN_APP_ICON, type AppInfo, type AppSettings, type ThemePreference } from '@shared/types'
 import { formatSql } from '@shared/sql'
 import { AppMark } from '@/components/layout/AppMark'
-import { Button, Callout, CodeBlock, Input, NumberInput, SegmentedControl, Skeleton, Switch } from '@/components/ui'
+import { Button, Callout, CodeBlock, Input, NumberInput, RadioCards, SegmentedControl, Skeleton, Switch, toast } from '@/components/ui'
 import { api, errorMessage } from '@/lib/api'
 import { cn } from '@/lib/cn'
 import { formatCount } from '@/lib/format'
+import { useAppIcons } from '@/stores/app-icons'
 import { SETTINGS_LIMITS, useSettings } from '@/stores/settings'
 import { useUi } from '@/stores/ui'
 import { SectionHeader, SettingRow, SettingsGroup, ThemeSwatch, useDraftSetting } from './controls'
@@ -21,7 +22,13 @@ const useSetting = <K extends keyof AppSettings>(key: K): AppSettings[K] => useS
 
 export function AppearanceSection({ saver }: SectionProps) {
   const theme = useSetting('theme')
+  const appIcon = useSetting('appIcon')
+  const customIcons = useAppIcons((s) => s.icons)
   const resolved = useUi((s) => s.resolvedTheme)
+  // The user may have added icons since the app started.
+  useEffect(() => void useAppIcons.getState().load(), [])
+  // An icon whose file was removed: the built-in one is what the Dock shows.
+  const iconValue = customIcons.some((icon) => icon.id === appIcon) ? appIcon : BUILTIN_APP_ICON
   return (
     <>
       <SectionHeader title="Appearance" description="How DataGrippe looks." />
@@ -41,6 +48,38 @@ export function AppearanceSection({ saver }: SectionProps) {
             ]}
           />
         </SettingRow>
+        <SettingRow
+          label="App icon"
+          description="Shown in the Dock and the About panel. Add your own as PNG files in the icons folder."
+          below={
+            <div className="flex flex-col gap-2">
+              <RadioCards<string>
+                aria-label="App icon"
+                layout="tile"
+                columns={4}
+                value={iconValue}
+                onValueChange={(value) => saver.save({ appIcon: value })}
+                options={[
+                  { value: BUILTIN_APP_ICON, title: 'DataGrippe', icon: <AppMark builtin size={40} /> },
+                  ...customIcons.map((icon) => ({
+                    value: icon.id,
+                    title: icon.label,
+                    icon: <img src={icon.dataUrl} width={40} height={40} alt="" draggable={false} className="shrink-0" />,
+                  })),
+                ]}
+              />
+              <Button
+                size="xs"
+                variant="ghost"
+                leadingIcon={FolderOpen}
+                className="self-start"
+                onClick={() => void api.app.openIconsFolder().catch((error: unknown) => toast.error('Could not open the icons folder', error))}
+              >
+                Open icons folder
+              </Button>
+            </div>
+          }
+        />
       </SettingsGroup>
     </>
   )

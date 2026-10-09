@@ -826,8 +826,26 @@ export interface WorkspaceState {
 
 export type ThemePreference = 'dark' | 'light' | 'system'
 
+/** The app icon the bundle carries; Settings › Appearance can show a custom one in the Dock instead. */
+export const BUILTIN_APP_ICON = 'datagrippe'
+
+/** A custom app icon: a PNG file of the icons folder ("DataGrip Halo.png" → id "datagrip-halo"). */
+export interface AppIconInfo {
+  id: string
+  label: string
+  /** data:image/png;base64,… (the renderer cannot read the file). */
+  dataUrl: string
+}
+
+/** App icon ids are lower-case slugs of the file names. */
+export function isAppIconId(value: unknown): value is string {
+  return typeof value === 'string' && /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/.test(value)
+}
+
 export interface AppSettings {
   theme: ThemePreference
+  /** BUILTIN_APP_ICON or the id of a custom icon (AppIconInfo). */
+  appIcon: string
   editorFontSize: number
   editorWordWrap: boolean
   editorTabSize: number
@@ -848,6 +866,7 @@ export interface AppSettings {
 
 export const DEFAULT_SETTINGS: AppSettings = {
   theme: 'dark',
+  appIcon: BUILTIN_APP_ICON,
   editorFontSize: 13,
   editorWordWrap: false,
   editorTabSize: 2,

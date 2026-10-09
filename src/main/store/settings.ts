@@ -1,6 +1,6 @@
 // settings.json — user preferences, always merged with DEFAULT_SETTINGS and clamped to sane ranges.
 import { join } from 'node:path'
-import { DEFAULT_SETTINGS, type AppSettings, type ThemePreference } from '@shared/types'
+import { DEFAULT_SETTINGS, isAppIconId, type AppSettings, type ThemePreference } from '@shared/types'
 import { isRecord, JsonFile } from './json-file'
 
 const THEMES: ThemePreference[] = ['dark', 'light', 'system']
@@ -20,6 +20,7 @@ export function sanitizeSettings(patch: unknown, base: AppSettings = DEFAULT_SET
   const p = isRecord(patch) ? patch : {}
   return {
     theme: THEMES.includes(p.theme as ThemePreference) ? (p.theme as ThemePreference) : base.theme,
+    appIcon: isAppIconId(p.appIcon) ? p.appIcon : base.appIcon,
     editorFontSize: clampInt(p.editorFontSize, 9, 32, base.editorFontSize),
     editorWordWrap: bool(p.editorWordWrap, base.editorWordWrap),
     editorTabSize: clampInt(p.editorTabSize, 1, 8, base.editorTabSize),

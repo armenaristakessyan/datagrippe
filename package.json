@@ -22,7 +22,8 @@
     "db:down": "docker compose -f docker-compose.test.yml down -v",
     "dist": "npm run build && electron-builder --mac --publish never",
     "dist:dir": "npm run build && electron-builder --mac --dir --publish never",
-    "dist:release": "npm run build && electron-builder --mac dmg --arm64 --x64 --publish never"
+    "dist:release": "npm run build && electron-builder --mac dmg --arm64 --x64 --publish never",
+    "dist:local": "npm run build && electron-builder --mac dmg --arm64 --publish never -c.mac.icon=$(test -f build/local/icon.icns && echo build/local/icon.icns || echo build/icon.png)"
   },
   "dependencies": {
     "mssql": "^12.7.4",
@@ -81,6 +82,12 @@
       "**/*.node"
     ],
     "icon": "build/icon.png",
+    "extraResources": [
+      {
+        "from": "build/icon.png",
+        "to": "icon.png"
+      }
+    ],
     "mac": {
       "category": "public.app-category.developer-tools",
       "target": [

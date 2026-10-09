@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type KeyboardEvent } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { ChevronsDownUp, FolderTree, Import, Plus, RefreshCw, Search, SearchX } from 'lucide-react'
-import { openDbeaverImport } from '@/components/import/useDbeaverImportCommand'
+import { openDatagripImport, openDbeaverImport } from '@/components/import/useDbeaverImportCommand'
 import {
   Button,
   ContextMenu,
@@ -396,6 +396,9 @@ function ExplorerTree() {
             </DropdownMenuItem>
             <DropdownMenuItem icon={Import} onSelect={openDbeaverImport}>
               Import from DBeaver…
+            </DropdownMenuItem>
+            <DropdownMenuItem icon={Import} onSelect={openDatagripImport}>
+              Import from DataGrip…
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

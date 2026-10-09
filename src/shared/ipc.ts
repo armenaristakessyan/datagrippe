@@ -8,6 +8,7 @@
 // - Main → renderer push events are listed in `IpcEvents`.
 
 import type {
+  AppIconInfo,
   AppInfo,
   AppSettings,
   ApplyChangesResult,
@@ -69,6 +70,10 @@ export interface IpcContract {
   'app:info': () => AppInfo
   'app:openExternal': (url: string) => void
   'app:showItemInFolder': (path: string) => void
+  /** Custom app icons: the PNG files of <userData>/icons. */
+  'app:icons': () => AppIconInfo[]
+  /** Open the icons folder in Finder (created when missing). */
+  'app:openIconsFolder': () => void
   /**
    * Work that would be lost on quit / window close (pending table edits…). Main asks the user before
    * quitting when this list is not empty or a console has an open transaction. Send [] once saved.
@@ -139,6 +144,8 @@ export interface IpcContract {
    * DBeaver's credentials files are never read: passwords are not imported.
    */
   'import:dbeaverScan': (path?: string) => DbeaverScanResult
+  /** Data sources copied in DataGrip (or a dataSources.xml), pasted as text. */
+  'import:datagripParse': (text: string) => DbeaverScanResult
 
   // --- metadata (uses the connection's metadata pool; connects lazily) ------
   'meta:databases': (connectionId: string) => DatabaseInfo[]
@@ -248,6 +255,7 @@ export type MenuCommand =
   | 'focus-results'
   /** File ▸ Import from DBeaver… (no accelerator). */
   | 'import-dbeaver'
+  | 'import-datagrip'
 
 export interface IpcEvents {
   /** A session lost its server connection unexpectedly. */

@@ -2,7 +2,8 @@
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { app, BrowserWindow, dialog, nativeTheme, powerMonitor, safeStorage, screen, session, shell } from 'electron'
-import type { UnsavedWorkItem } from '@shared/types'
+import { BUILTIN_APP_ICON, type UnsavedWorkItem } from '@shared/types'
+import { appIconFile, iconsDir } from './app-icons'
 import { getDriver } from './db/drivers'
 import { SessionManager } from './db/session-manager'
 import { openTunnel } from './db/tunnel'
@@ -283,8 +284,8 @@ function start(): void {
   })
 
   app.whenReady().then(() => {
-    showDevIcon()
     stores = createStores(userDataPath, process.env.DATAGRIPPE_NO_KEYCHAIN === '1' ? NO_KEYCHAIN : safeStorage)
+    applyAppIcon(stores.settings.get().appIcon)
     const activeStores = stores
     // Vault tokens and database passwords stay in this process; the renderer only sees login / lease events.
     // The vault CLI's VAULT_ADDR / VAULT_CACERT: from the login shell when started from Finder (never in tests).
@@ -325,7 +326,10 @@ function start(): void {
       getWindow,
       emit,
       operations,
-      onSettingsChanged: () => getWindow()?.setBackgroundColor(prefersDark() ? BACKGROUND.dark : BACKGROUND.light),
+      onSettingsChanged: () => {
+        getWindow()?.setBackgroundColor(prefersDark() ? BACKGROUND.dark : BACKGROUND.light)
+        applyAppIcon(activeStores.settings.get().appIcon)
+      },
       onUnsavedWork: (items) => {
         unsavedWork = items
       },
@@ -398,16 +402,24 @@ function start(): void {
   })
 }
 
+/** The PNG the Dock shows; null while it is the bundle's own icon. */
+let dockIcon: string | null = null
+
 /**
- * Unpackaged runs (npm run dev, tests) would show Electron's own icon: use build/icon.png, the icon
- * electron-builder bundles into the packaged app.
+ * Show the app icon chosen in Settings › Appearance (a PNG of <userData>/icons) in the Dock and the About panel.
+ * Finder and Launchpad keep the bundle's icon: changing them would modify the signed bundle. Back to the built-in
+ * icon, its PNG (shipped as icon.png) replaces the custom one. Unpackaged runs (npm run dev, tests) always set an
+ * icon, or the Dock would show Electron's own.
  */
-function showDevIcon(): void {
-  if (app.isPackaged) return
-  const icon = join(__dirname, '../../build/icon.png')
-  if (!existsSync(icon)) return
+function applyAppIcon(id: string): void {
+  if (process.platform !== 'darwin' || !app.dock) return
+  const custom = id === BUILTIN_APP_ICON ? undefined : appIconFile(iconsDir(userDataPath), id)
+  const builtin = app.isPackaged ? join(process.resourcesPath, 'icon.png') : join(__dirname, '../../build/icon.png')
+  const next = custom ?? (dockIcon !== null || !app.isPackaged ? builtin : undefined)
+  if (!next || next === dockIcon || !existsSync(next)) return
   try {
-    if (process.platform === 'darwin') app.dock?.setIcon(icon)
+    app.dock.setIcon(next)
+    dockIcon = next
   } catch (error) {
     console.warn('[main] cannot set the dock icon', error)
   }

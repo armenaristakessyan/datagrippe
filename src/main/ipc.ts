@@ -8,6 +8,8 @@ import type { EmitFn, SessionManager } from './db/session-manager'
 import { exportQuery } from './export/export-query'
 import { chooseExportFile, openText, pickImportFile, pickPath, saveText, writeTextInPlace } from './export/files'
 import { defaultDbeaverScanAllowed } from './automation-guard'
+import { ensureIconsDir, iconsDir, listAppIcons } from './app-icons'
+import { parseDatagrip } from './import/datagrip'
 import { scanDbeaver } from './import/dbeaver'
 import { importCsv, previewCsvFile } from './import/import-csv'
 import { OperationRegistry } from './operations'
@@ -24,6 +26,8 @@ export const ARG_SPECS: { [C in IpcChannel]: ArgKind[] } = {
   'app:info': [],
   'app:openExternal': ['string'],
   'app:showItemInFolder': ['string'],
+  'app:icons': [],
+  'app:openIconsFolder': [],
   'app:setUnsavedWork': ['array'],
   'settings:get': [],
   'settings:update': ['object'],
@@ -44,6 +48,7 @@ export const ARG_SPECS: { [C in IpcChannel]: ArgKind[] } = {
   'vault:defaults': [],
   'vault:discover': ['object'],
   'import:dbeaverScan': ['string?'],
+  'import:datagripParse': ['string'],
   'meta:databases': ['string'],
   'meta:schemas': ['string', 'string'],
   'meta:objects': ['string', 'string', 'string'],
@@ -190,6 +195,11 @@ export function createHandlers({
       await shell.openExternal(url)
     },
     'app:showItemInFolder': (path) => shell.showItemInFolder(path),
+    'app:icons': () => listAppIcons(iconsDir(app.getPath('userData'))),
+    'app:openIconsFolder': async () => {
+      const failure = await shell.openPath(ensureIconsDir(iconsDir(app.getPath('userData'))))
+      if (failure) throw DriverError.of('internal', `Could not open the icons folder: ${failure}`)
+    },
     'app:setUnsavedWork': (items) => onUnsavedWork?.(sanitizeUnsavedWork(items)),
 
     'settings:get': () => stores.settings.get(),
@@ -244,6 +254,7 @@ export function createHandlers({
       }
       return scanDbeaver(chosen, stores.connections.list())
     },
+    'import:datagripParse': (text) => parseDatagrip(text, stores.connections.list()),
 
     'meta:databases': (id) => sessions.databases(id),
     'meta:schemas': (id, database) => sessions.schemas(id, database),

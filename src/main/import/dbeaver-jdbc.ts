@@ -187,6 +187,49 @@ function parseJtds(rest: string): ParsedJdbcUrl {
   return out
 }
 
+const ADO_HOST_KEYS = ['data source', 'server', 'address', 'addr', 'network address']
+const ADO_DATABASE_KEYS = ['initial catalog', 'database']
+const ADO_USER_KEYS = ['user id', 'uid', 'user', 'username']
+const ADO_PASSWORD_KEYS = ['password', 'pwd']
+
+/**
+ * SQL Server connection string in the ADO.NET syntax DataGrip accepts as a URL:
+ * "data source=host[\instance][,port];initial catalog=db;user id=…;TrustServerCertificate=True". Its keys map to
+ * the JDBC ones (user, password, encrypt, trustservercertificate) so callers read both the same way. Null when the
+ * text names no server.
+ */
+export function parseAdoConnectionString(text: unknown): ParsedJdbcUrl | null {
+  if (typeof text !== 'string' || !text.includes('=')) return null
+  const raw = splitSemicolonProps(text)
+  // Keys are case- and space-insensitive in ADO.NET ("Initial Catalog", "initial  catalog").
+  const props: Record<string, string> = {}
+  for (const [key, value] of Object.entries(raw)) props[key.replace(/\s+/g, ' ').trim()] = value.trim().replace(/^(["'])(.*)\1$/, '$2')
+  const first = (keys: string[]) => keys.map((k) => props[k]).find((v) => v !== undefined && v !== '')
+  const server = first(ADO_HOST_KEYS)
+  if (!server) return null
+  const out: ParsedJdbcUrl = { kind: 'sqlserver', hosts: [], params: {} }
+  // "tcp:host,port", "host,port", "host\instance".
+  let spec = server.replace(/^tcp:/i, '')
+  let port: number | undefined
+  const comma = spec.lastIndexOf(',')
+  if (comma > 0) {
+    port = toPort(spec.slice(comma + 1))
+    spec = spec.slice(0, comma)
+  }
+  const parsed = parseSqlServerHost(spec)
+  if (parsed.host) out.hosts.push({ host: parsed.host, ...((port ?? parsed.port) ? { port: port ?? parsed.port } : {}) })
+  if (parsed.instanceName) out.instanceName = parsed.instanceName
+  const database = first(ADO_DATABASE_KEYS)
+  if (database) out.database = database
+  const user = first(ADO_USER_KEYS)
+  if (user) out.params.user = user
+  if (first(ADO_PASSWORD_KEYS) !== undefined) out.params.password = '(set)'
+  if (props.encrypt !== undefined) out.params.encrypt = props.encrypt
+  const trust = props.trustservercertificate ?? props['trust server certificate']
+  if (trust !== undefined) out.params.trustservercertificate = trust
+  return out
+}
+
 /** Parse a PostgreSQL or SQL Server JDBC URL; null for anything else. */
 export function parseJdbcUrl(url: unknown): ParsedJdbcUrl | null {
   if (typeof url !== 'string') return null

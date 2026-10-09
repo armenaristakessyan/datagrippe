@@ -18,7 +18,8 @@ src/main/           index.ts, ipc.ts, menu.ts, store/ (persistence), db/ (sessio
 src/main/vault/     Vault client, login (token with OIDC fallback / OIDC / ldap / userpass), credentials, leases,
                     environment.ts (VAULT_ADDR… from the login shell), discovery.ts (secret path suggestions);
                     VaultService is injected into SessionManager (deps.vault) for connections with authMode 'vault'
-src/main/import/    CSV import, DBeaver import (scans data-sources*.json only, never credentials files)
+src/main/import/    CSV import, DBeaver import (scans data-sources*.json only, never credentials files), DataGrip import
+                    (datagrip.ts: data sources pasted from DataGrip's clipboard, shown by the same import dialog)
 src/main/db/postgres, src/main/db/mssql   DbDriver implementations (contract: src/main/db/types.ts)
 src/preload/        generic typed bridge → window.datagrippe
 src/renderer/src/   lib/ (api client, commands, editor registry), stores/ (zustand), components/<feature>/
@@ -47,7 +48,10 @@ tests/integration/  driver + session-manager tests against the docker test datab
   accelerators can't be pressed from Playwright: specs click menu items (`dg.menu('New console')`) instead.
 - `npm run dist:dir` / `npm run dist` — electron-builder: `dist/mac-arm64/DataGrippe.app` / `dist/DataGrippe-<version>-<arch>.dmg`;
   `npm run dist:release` builds both DMGs (arm64 + x64). Builds are signed ad hoc (`identity: "-"`, hardened runtime,
-  electron-builder's default entitlements), not notarized. The app icon is `build/icon.png`, rendered from `build/icon.svg`.
+  electron-builder's default entitlements), not notarized. The app icon is `build/icon.png`, rendered from `build/icon.svg`
+  (also shipped as `Resources/icon.png` to restore the Dock icon). Settings › Appearance › App icon offers the PNG files of
+  `<userData>/icons` (`src/main/app-icons.ts`, `stores/app-icons.ts`) and shows the chosen one in the Dock. Third-party icons
+  never go in the repo (it is public): `npm run dist:local` uses a gitignored `build/local/icon.icns` as the bundle icon.
 - CI (GitHub Actions): `.github/workflows/ci.yml` (push to main, PRs: typecheck, unit, build, then integration against
   the compose containers on Ubuntu; no e2e). `release.yml` calls it, then builds and verifies both DMGs on macOS: a tag
   `v<package.json version>` publishes a GitHub release (notes: `.github/release-notes.md` + generated), a manual run

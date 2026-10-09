@@ -43,6 +43,8 @@ export interface CandidateListProps {
   /** Paths were suggested from Vault: an empty row says "no match" rather than "required". */
   suggestRan?: boolean
   disabled?: boolean
+  /** Accessible name of the list (default "DBeaver connections"). */
+  label?: string
 }
 
 export function CandidateList(props: CandidateListProps) {
@@ -50,7 +52,7 @@ export function CandidateList(props: CandidateListProps) {
   const baseId = useId()
   const selectable = (list: DbeaverImportCandidate[]) => list.filter((c) => isImportable(c) && outcomes.get(candidateKey(c))?.state !== 'imported')
   return (
-    <div role="list" aria-label="DBeaver connections">
+    <div role="list" aria-label={props.label ?? 'DBeaver connections'}>
       {groups.map((group, index) => {
         const rows = selectable(group.candidates)
         const state = groupSelectionState({ ...group, candidates: rows }, selected)

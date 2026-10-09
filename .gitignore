@@ -8,3 +8,6 @@ playwright-report/
 .env
 .env.local
 *.tsbuildinfo
+
+# Local-only assets (e.g. a third-party app icon for your own builds): never committed.
+build/local/

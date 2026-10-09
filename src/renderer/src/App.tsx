@@ -15,6 +15,7 @@ import { flushAllEditors } from '@/lib/editor-registry'
 import { closeTopmostOverlay } from '@/lib/focus'
 import { hasBridge } from '@/lib/platform'
 import { bindTheme } from '@/lib/theme'
+import { useAppIcons } from '@/stores/app-icons'
 import { bindConnectionEvents, useConnections } from '@/stores/connections'
 import { bindConsoleEvents } from '@/stores/consoles'
 import { useSettings } from '@/stores/settings'
@@ -95,6 +96,8 @@ function Bootstrap() {
 
   useEffect(() => {
     if (state.phase !== 'ready') return
+    // The custom app icon (if one is chosen) for the marks of the app.
+    void useAppIcons.getState().load()
     const offs = [
       bindConnectionEvents(),
       bindConsoleEvents(),

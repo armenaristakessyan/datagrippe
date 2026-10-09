@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react'
 import { CommandPalette } from '@/components/palette/CommandPalette'
 import { ConnectionDialog } from '@/components/connections/ConnectionDialog'
 import { HistoryPanel } from '@/components/history/HistoryPanel'
-import { DbeaverImportDialog } from '@/components/import/DbeaverImportDialog'
+import { DatagripImportDialog, DbeaverImportDialog } from '@/components/import/DbeaverImportDialog'
 import { ImportCsvDialog } from '@/components/table/ImportCsvDialog'
 import { SettingsDialog } from '@/components/settings/SettingsDialog'
 import { VaultLoginOverlay } from '@/components/vault/VaultLoginOverlay'
@@ -103,6 +103,7 @@ export function AppShell() {
       <SettingsDialog />
       <HistoryPanel />
       <DbeaverImportDialog />
+      <DatagripImportDialog />
       <VaultLoginOverlay />
       <ImportCsvDialog />
       <DialogHost />

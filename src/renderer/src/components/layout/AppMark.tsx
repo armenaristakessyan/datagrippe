@@ -1,11 +1,24 @@
 import { useId } from 'react'
+import { BUILTIN_APP_ICON } from '@shared/types'
 import { cn } from '@/lib/cn'
+import { useAppIcons } from '@/stores/app-icons'
+import { useSettings } from '@/stores/settings'
+
+/** The app icon chosen in Settings › Appearance: the built-in mark (or always, with `builtin`) or a custom PNG. */
+export function AppMark({ size = 28, className, builtin }: { size?: number; className?: string; builtin?: boolean }) {
+  const choice = useSettings((s) => s.settings.appIcon)
+  const custom = useAppIcons((s) => (builtin || choice === BUILTIN_APP_ICON ? undefined : s.icons.find((icon) => icon.id === choice)))
+  if (custom) {
+    return <img src={custom.dataUrl} width={size} height={size} alt="" aria-hidden draggable={false} className={cn('shrink-0 select-none', className)} />
+  }
+  return <BuiltinMark size={size} className={className} />
+}
 
 /**
  * DataGrippe app mark — the app icon (build/icon.svg) without its outer shadow: a "DG" monogram on a dark glass
  * panel over a vivid mesh gradient; the G's bar is the gradient "grip".
  */
-export function AppMark({ size = 28, className }: { size?: number; className?: string }) {
+function BuiltinMark({ size, className }: { size: number; className?: string }) {
   const id = useId().replace(/:/g, '')
   const ref = (name: string) => `url(#${id}${name})`
   return (

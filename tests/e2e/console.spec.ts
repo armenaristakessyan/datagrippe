@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs'
+import { copyFileSync, mkdirSync, readFileSync } from 'node:fs'
+import { join, resolve } from 'node:path'
 import { expect, test, type Dg } from './fixtures'
 
 /** Pick a suggestion from Monaco's suggest widget by its label. */
@@ -137,12 +138,19 @@ test.describe('palette and theme', () => {
     await expect(dg.grid.getByRole('gridcell').first()).toBeVisible()
     await dg.shot('order-items-light')
 
-    // The theme is a persisted setting.
+    // The theme is a persisted setting, and so is the app icon: the PNG files of the icons folder join the built-in one.
+    mkdirSync(join(dg.userDataDir, 'icons'), { recursive: true })
+    copyFileSync(resolve('build/icon.png'), join(dg.userDataDir, 'icons', 'Sample Icon.png'))
     await dg.menu('Settings…')
     const settings = page.getByRole('dialog', { name: 'Settings' })
     await expect(settings.getByRole('radio', { name: /Light/ })).toHaveAttribute('aria-checked', 'true')
     await settings.getByRole('radio', { name: /Dark/ }).click()
     await expect(page.locator('html')).not.toHaveClass(/light/)
     await dg.shot('settings')
+
+    await expect(settings.getByRole('radio', { name: 'DataGrippe', exact: true })).toHaveAttribute('aria-checked', 'true')
+    await settings.getByRole('radio', { name: 'Sample Icon' }).click()
+    await expect(settings.getByRole('radio', { name: 'Sample Icon' })).toHaveAttribute('aria-checked', 'true')
+    await expect.poll(() => readFileSync(join(dg.userDataDir, 'settings.json'), 'utf8')).toMatch(/"appIcon":\s*"sample-icon"/)
   })
 })
