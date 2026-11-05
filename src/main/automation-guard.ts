@@ -5,8 +5,11 @@ import { homedir, userInfo } from 'node:os'
 import { DriverError } from './db/errors'
 
 function electronSwitch(name: string): boolean {
+  // Outside Electron (unit tests under Node), require('electron') runs the npm package, which downloads the
+  // Electron binary when it is missing — synchronously, and again on every call when the download fails.
+  if (!process.versions.electron) return false
   try {
-    // Not a static import: this module is also loaded by unit tests, where 'electron' is just a path string.
+    // Not a static import: this module is also loaded by unit tests.
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const electron = require('electron') as { app?: { commandLine?: { hasSwitch(name: string): boolean } } }
     return electron.app?.commandLine?.hasSwitch(name) ?? false

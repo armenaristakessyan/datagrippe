@@ -1,5 +1,8 @@
+import { createRequire } from 'node:module'
 import { describe, expect, it } from 'vitest'
 import { assertHostAllowed, assertUrlAllowed, defaultDbeaverScanAllowed, isAutomatedRun, isLoopbackHost } from './automation-guard'
+
+const nodeRequire = createRequire(import.meta.url)
 
 describe('automation guard', () => {
   it('recognises loopback hosts only', () => {
@@ -11,6 +14,16 @@ describe('automation guard', () => {
     expect(isAutomatedRun({ DATAGRIPPE_AUTOMATION: '1' }, [])).toBe(true)
     expect(isAutomatedRun({}, ['/x/Electron', '-r', '/repo/node_modules/playwright-core/lib/server/electron/loader.js'])).toBe(true)
     expect(isAutomatedRun({}, ['/Applications/DataGrippe.app/Contents/MacOS/DataGrippe'])).toBe(false)
+  })
+
+  it('does not load the electron npm package outside Electron', () => {
+    // Under Node, require('electron') runs the npm package, which downloads the Electron binary when it is
+    // missing (synchronously, and again on every call after a failed download): CI unit tests hung on it.
+    const electronPackage = nodeRequire.resolve('electron')
+    delete nodeRequire.cache[electronPackage]
+    expect(process.versions.electron).toBeUndefined()
+    expect(isAutomatedRun({}, [])).toBe(false)
+    expect(nodeRequire.cache[electronPackage]).toBeUndefined()
   })
 
   it('blocks non-local targets only during automated runs', () => {
