@@ -15,6 +15,9 @@ import {
   EmptyState,
   IconButton,
   Input,
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
   SkeletonLines,
   Tooltip,
 } from '@/components/ui'
@@ -24,6 +27,7 @@ import { useConnections } from '@/stores/connections'
 import { useExplorer } from '@/stores/explorer'
 import { useUi } from '@/stores/ui'
 import { activateObject, refreshRow, runLoad } from './actions'
+import { isInspectable, PropertiesCard, propertiesLabel } from './PropertiesCard'
 import { ExplorerEmpty } from './ExplorerEmpty'
 import { ExplorerMenuContent } from './ExplorerMenu'
 import { ExplorerRow, ROW_HEIGHT, type RowHandlers } from './ExplorerRow'
@@ -57,6 +61,8 @@ function ExplorerTree() {
   const selectedId = useExplorer((s) => s.selectedNode)
   const [filterExpanded, setFilterExpanded] = useState<Record<string, boolean>>({})
   const [menuRow, setMenuRow] = useState<TreeRow | null>(null)
+  /** Column / key / index / foreign key / trigger row whose properties popover is open. */
+  const [inspectId, setInspectId] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
 
   const rows = useMemo(
@@ -69,6 +75,22 @@ function ExplorerTree() {
 
   const indexById = useMemo(() => new Map(rows.map((r, i) => [r.id, i])), [rows])
   const selectedIndex = selectedId !== null ? (indexById.get(selectedId) ?? -1) : -1
+  const inspectIndex = inspectId !== null ? (indexById.get(inspectId) ?? -1) : -1
+  const inspectRow = inspectIndex >= 0 ? rows[inspectIndex] : undefined
+  const inspected = inspectRow && isInspectable(inspectRow.node) ? inspectRow.node : undefined
+
+  // The open properties follow the selection from item to item, and close on any other row.
+  useEffect(() => {
+    setInspectId((current) => {
+      if (current === null || current === selectedId) return current
+      const row = selectedId !== null ? rowsRef.current.find((r) => r.id === selectedId) : undefined
+      return row && isInspectable(row.node) ? row.id : null
+    })
+  }, [selectedId])
+  // ...and close when the item leaves the tree (collapsed, filtered out, refreshed away).
+  useEffect(() => {
+    if (inspectId !== null && !inspected) setInspectId(null)
+  }, [inspectId, inspected])
 
   // Expanded nodes whose children were never requested (restored state, filter browsing).
   useEffect(() => {
@@ -148,6 +170,10 @@ function ExplorerTree() {
         activateObject(node.path, node.object)
         return
       }
+      if (isInspectable(node)) {
+        setInspectId(row.id)
+        return
+      }
       if (node.type === 'message') {
         if (node.retry) runLoad(node.retry, true)
         return
@@ -187,9 +213,15 @@ function ExplorerTree() {
   const handlers = useMemo<RowHandlers>(
     () => ({
       onSelect: select,
+      onClick: (row) => {
+        select(row)
+        // A click on a column, key, index… shows its properties; a second click hides them.
+        if (isInspectable(row.node)) setInspectId((current) => (current === row.id ? null : row.id))
+      },
       onToggle: (row) => toggle(row),
       onActivate: activate,
       onContextMenu: (row) => {
+        setInspectId(null)
         setMenuRow(row)
         select(row)
       },
@@ -267,6 +299,11 @@ function ExplorerTree() {
         }
         break
       case 'Escape':
+        if (inspectId !== null) {
+          e.preventDefault()
+          setInspectId(null)
+          return
+        }
         if (filtering) {
           e.preventDefault()
           setFilter('')
@@ -450,6 +487,32 @@ function ExplorerTree() {
                 className="group/tree relative outline-none"
                 style={{ height: virtualizer.getTotalSize() }}
               >
+                {inspected && (
+                  <Popover open onOpenChange={(open) => !open && setInspectId(null)}>
+                    {/* Stands in for the row, which unmounts when virtualization scrolls it away. */}
+                    <PopoverAnchor asChild>
+                      <div aria-hidden className="pointer-events-none absolute inset-x-1.5" style={{ top: inspectIndex * ROW_HEIGHT, height: ROW_HEIGHT }} />
+                    </PopoverAnchor>
+                    <PopoverContent
+                      side="right"
+                      sideOffset={10}
+                      hideWhenDetached
+                      aria-label={propertiesLabel(inspected)}
+                      className="max-h-[var(--radix-popover-content-available-height)] w-80 overflow-y-auto"
+                      // The tree keeps the focus: arrow keys move the selection and the card follows it.
+                      onOpenAutoFocus={(e) => e.preventDefault()}
+                      onCloseAutoFocus={(e) => e.preventDefault()}
+                      onFocusOutside={(e) => e.preventDefault()}
+                      onPointerDownOutside={(e) => {
+                        // A click on the inspected row itself toggles the card (see onClick).
+                        const target = e.target instanceof Element ? e.target.closest('[data-row-id]') : null
+                        if (target?.getAttribute('data-row-id') === inspectId) e.preventDefault()
+                      }}
+                    >
+                      <PropertiesCard node={inspected} />
+                    </PopoverContent>
+                  </Popover>
+                )}
                 {items.map((item) => {
                   const row = rows[item.index]
                   if (!row) return null
@@ -469,7 +532,12 @@ function ExplorerTree() {
             )}
           </div>
         </ContextMenuTrigger>
-        <ExplorerMenuContent row={menuRow} onCollapseAll={collapseAll} onRefreshAll={() => void refreshAll()} />
+        <ExplorerMenuContent
+          row={menuRow}
+          onCollapseAll={collapseAll}
+          onRefreshAll={() => void refreshAll()}
+          onShowProperties={(row) => setInspectId(row.id)}
+        />
       </ContextMenu>
     </div>
   )

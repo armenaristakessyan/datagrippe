@@ -6,6 +6,7 @@ import {
   Copy,
   FileCode2,
   FileUp,
+  Info,
   KeyRound,
   LogOut,
   Pencil,
@@ -57,17 +58,19 @@ export interface ExplorerMenuProps {
   row: TreeRow | null
   onCollapseAll: () => void
   onRefreshAll: () => void
+  /** Open the properties popover of a column / key / index / foreign key / trigger row. */
+  onShowProperties: (row: TreeRow) => void
 }
 
-export function ExplorerMenuContent({ row, onCollapseAll, onRefreshAll }: ExplorerMenuProps) {
+export function ExplorerMenuContent({ row, onCollapseAll, onRefreshAll, onShowProperties }: ExplorerMenuProps) {
   return (
     <ContextMenuContent className="min-w-[224px]" onCloseAutoFocus={(e) => e.preventDefault()}>
-      {row ? <RowItems row={row} /> : <BackgroundItems onCollapseAll={onCollapseAll} onRefreshAll={onRefreshAll} />}
+      {row ? <RowItems row={row} onShowProperties={onShowProperties} /> : <BackgroundItems onCollapseAll={onCollapseAll} onRefreshAll={onRefreshAll} />}
     </ContextMenuContent>
   )
 }
 
-function BackgroundItems({ onCollapseAll, onRefreshAll }: Omit<ExplorerMenuProps, 'row'>) {
+function BackgroundItems({ onCollapseAll, onRefreshAll }: Pick<ExplorerMenuProps, 'onCollapseAll' | 'onRefreshAll'>) {
   return (
     <>
       <ContextMenuItem icon={Plus} shortcut={MENU_ACCELERATORS['new-connection']} onSelect={() => useUi.getState().openConnectionDialog()}>
@@ -84,7 +87,7 @@ function BackgroundItems({ onCollapseAll, onRefreshAll }: Omit<ExplorerMenuProps
   )
 }
 
-function RowItems({ row }: { row: TreeRow }) {
+function RowItems({ row, onShowProperties }: { row: TreeRow; onShowProperties: (row: TreeRow) => void }) {
   const node = row.node
   const refresh = () => void refreshRow(row)
   switch (node.type) {
@@ -151,9 +154,14 @@ function RowItems({ row }: { row: TreeRow }) {
       )
     case 'column':
       return (
-        <ContextMenuItem icon={Copy} onSelect={() => void copyText(node.column.name)}>
-          Copy name
-        </ContextMenuItem>
+        <>
+          <ContextMenuItem icon={Info} shortcut="Enter" onSelect={() => onShowProperties(row)}>
+            Properties
+          </ContextMenuItem>
+          <ContextMenuItem icon={Copy} onSelect={() => void copyText(node.column.name)}>
+            Copy name
+          </ContextMenuItem>
+        </>
       )
     case 'detail-folder':
       return (
@@ -163,9 +171,14 @@ function RowItems({ row }: { row: TreeRow }) {
       )
     case 'detail':
       return (
-        <ContextMenuItem icon={Copy} onSelect={() => void copyText(node.name)}>
-          Copy name
-        </ContextMenuItem>
+        <>
+          <ContextMenuItem icon={Info} shortcut="Enter" onSelect={() => onShowProperties(row)}>
+            Properties
+          </ContextMenuItem>
+          <ContextMenuItem icon={Copy} onSelect={() => void copyText(node.name)}>
+            Copy name
+          </ContextMenuItem>
+        </>
       )
     case 'message':
       return node.retry ? (

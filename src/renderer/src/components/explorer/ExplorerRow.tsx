@@ -49,6 +49,8 @@ export const KIND_ICON: Record<ObjectKind, { icon: LucideIcon; className: string
 
 export interface RowHandlers {
   onSelect: (row: TreeRow) => void
+  /** Single click on the row (the chevron only selects and toggles). */
+  onClick: (row: TreeRow) => void
   onToggle: (row: TreeRow) => void
   onActivate: (row: TreeRow) => void
   onContextMenu: (row: TreeRow) => void
@@ -261,7 +263,7 @@ export const ExplorerRow = memo(function ExplorerRow({ row, domId, selected, run
 
   const onClick = (e: MouseEvent) => {
     if (e.detail > 1) return
-    handlers.onSelect(row)
+    handlers.onClick(row)
   }
   return (
     <div
