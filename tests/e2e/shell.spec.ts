@@ -195,4 +195,19 @@ test.describe('app shell', () => {
     })
     expect(draggable).toEqual([])
   })
+
+  test('the sidebar can be widened up to the middle of the window', async ({ dg }) => {
+    const { page } = dg
+    await dg.createConnection('postgres')
+    const handle = page.getByRole('separator').first()
+    const windowWidth = await page.evaluate(() => (globalThis as unknown as { innerWidth: number }).innerWidth)
+
+    // End on the focused handle widens the sidebar to its maximum: half of the window, past the old 480 px cap.
+    await handle.focus()
+    await page.keyboard.press('End')
+    await expect.poll(async () => (await handle.boundingBox())?.x ?? 0).toBeGreaterThan(560)
+    const x = (await handle.boundingBox())?.x ?? 0
+    expect(Math.abs(x - windowWidth / 2)).toBeLessThan(24)
+    await dg.shot('wide-sidebar')
+  })
 })
