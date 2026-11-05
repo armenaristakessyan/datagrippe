@@ -23,14 +23,16 @@ import { useGlobalCommands } from './useGlobalCommands'
 import { WelcomeScreen } from './WelcomeScreen'
 
 export const SIDEBAR_MIN = 200
-export const SIDEBAR_MAX = 480
+/** Half of the panel group: the sidebar can reach the middle of the window (the main panel keeps its own minimum). */
+export const SIDEBAR_MAX = '50%'
 export const SIDEBAR_DEFAULT = 272
 
 function initialSidebarWidth(): number {
   const stored = useTabs.getState().layout.sidebarWidth
-  return typeof stored === 'number' && Number.isFinite(stored)
-    ? Math.min(SIDEBAR_MAX, Math.max(SIDEBAR_MIN, Math.round(stored)))
-    : SIDEBAR_DEFAULT
+  if (typeof stored !== 'number' || !Number.isFinite(stored)) return SIDEBAR_DEFAULT
+  // A width saved in a wider window still fits this one.
+  const max = Math.max(SIDEBAR_MIN, Math.floor(window.innerWidth / 2))
+  return Math.min(max, Math.max(SIDEBAR_MIN, Math.round(stored)))
 }
 
 export function AppShell() {
